@@ -35,13 +35,13 @@ export async function POST(request:NextRequest){
   const file=form.get("file");
   if(!(file instanceof File))return apiError("Choose an image or PDF file.",422);
   if(file.size===0)return apiError("The selected file is empty.",422);
-  if(file.size>20*1024*1024)return apiError("Maximum upload size is 20 MB.",413);
+  if(file.size>4*1024*1024)return apiError("For compatibility with serverless deployment limits, maximum upload size is 4 MB per file.",413);
   const buffer=Buffer.from(await file.arrayBuffer());
   const detected=detectFile(buffer);
   if(!detected)return apiError("Unsupported file contents. Use JPEG, PNG, WebP, AVIF or PDF.",415);
   if(file.type&&file.type!==detected.mimeType)return apiError("File type does not match its content.",415);
   const isImage=detected.resourceType==="image";
-  if(isImage&&file.size>10*1024*1024)return apiError("Image upload size limit is 10 MB.",413);
+  if(isImage&&file.size>4*1024*1024)return apiError("Image upload size limit is 4 MB.",413);
   const input=metadataSchema.safeParse({title:form.get("title")||file.name,altText:form.get("altText")||"",caption:form.get("caption")||""});
   if(!input.success)return validationError(input.error);
   await connectToDatabase();
