@@ -1,11 +1,12 @@
 import { z } from "zod";
-const safeHref = z.string().trim().max(500).refine((value)=>value===""||(value.startsWith("/")&&!value.startsWith("//"))||/^https?:\/\/\S+$/i.test(value)||value.startsWith("mailto:")||value.startsWith("tel:"),"Use a local path or a safe HTTP(S), email, or telephone URL.");
+const safeHref = z.string().trim().max(500).refine((value)=>value===""||(value.startsWith("/")&&!value.startsWith("//"))||/^https:\/\/\S+$/i.test(value)||value.startsWith("mailto:")||value.startsWith("tel:"),"Use a local path or a safe HTTP(S), email, or telephone URL.");
+const secureAssetUrl = z.string().trim().max(1000).refine((value)=>value===""||/^https:\/\/\S+$/i.test(value),"Use a secure HTTPS asset URL or leave blank.");
 const navChild = z.object({id:z.string().min(1).max(100),label:z.string().trim().min(1).max(80),href:safeHref});
 export const settingsSchema = z.object({
   schoolName:z.string().trim().min(1).max(120),
   tagline:z.string().trim().max(180),
-  logoUrl:z.string().trim().max(1000).url().or(z.literal("")),
-  faviconUrl:z.string().trim().max(1000).url().or(z.literal("")),
+  logoUrl:secureAssetUrl,
+  faviconUrl:secureAssetUrl,
   theme:z.object({
     primaryColor:z.string().regex(/^#[0-9a-fA-F]{6}$/),
     accentColor:z.string().regex(/^#[0-9a-fA-F]{6}$/),
@@ -19,6 +20,6 @@ export const settingsSchema = z.object({
   socialLinks:z.array(z.object({label:z.string().trim().min(1).max(60),url:z.string().trim().max(500).refine((value)=>/^https:\/\/\S+$/i.test(value),"Use a secure HTTPS URL.").refine((value)=>value.startsWith("https://"),"Social links must use HTTPS.")})).max(12),
   announcement:z.object({enabled:z.boolean(),message:z.string().trim().max(300),href:safeHref}),
   footerText:z.string().trim().max(500),
-  seo:z.object({title:z.string().trim().max(70),description:z.string().trim().max(180),ogImage:z.string().trim().max(1000).url().or(z.literal(""))})
+  seo:z.object({title:z.string().trim().max(70),description:z.string().trim().max(180),ogImage:secureAssetUrl})
 });
 export type SiteSettingsInput=z.infer<typeof settingsSchema>;
