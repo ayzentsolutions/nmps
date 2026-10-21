@@ -28,6 +28,7 @@ export async function POST(request:NextRequest){
  try{
   await connectToDatabase();
   const item=await User.create({name:input.name,email:input.email.toLowerCase(),passwordHash:await bcrypt.hash(input.password,12),role:input.role,schoolId,isActive:true});
+  await recordAudit({ schoolId, actorId: access.session.user.id, actorRole: access.session.user.role, action: "user.created", targetType: "user", targetId: String(item._id), metadata: { role: item.role } });
   return NextResponse.json({data:{id:String(item._id),name:item.name,email:item.email,role:item.role,schoolId:item.schoolId,isActive:item.isActive}},{status:201});
  }catch(error){
   if(error&&typeof error==="object"&&"code"in error&&error.code===11000)return apiError("An account with this email address already exists.",409);
