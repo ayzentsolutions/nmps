@@ -1,5 +1,6 @@
 import {NextRequest,NextResponse} from "next/server";
 import MediaAsset from "@/models/MediaAsset";
+import { recordAudit } from "@/lib/audit";
 import {authorize} from "@/lib/permissions";
 import {connectToDatabase} from "@/lib/mongodb";
 import {getSchoolIdForSession,getSchoolFilter} from "@/lib/school";
@@ -52,6 +53,7 @@ export async function POST(request:NextRequest){
     schoolId,publicId:uploaded.publicId,secureUrl:uploaded.secureUrl,resourceType:uploaded.resourceType,format:uploaded.format||detected.format,bytes:uploaded.bytes,
     originalFilename:file.name.slice(0,255),title:input.data.title||file.name.slice(0,180),altText:input.data.altText||"",caption:input.data.caption||"",mimeType:detected.mimeType,uploadedBy:access.session.user.id
    });
+   await recordAudit({ schoolId: asset.schoolId, actorId: access.session.user.id, actorRole: access.session.user.role, action: "media.uploaded", targetType: "media-asset", targetId: String(asset._id), metadata: { resourceType: asset.resourceType, format: asset.format, bytes: asset.bytes } });
    return NextResponse.json({data:{id:String(asset._id),secureUrl:asset.secureUrl,resourceType:asset.resourceType,title:asset.title,altText:asset.altText,caption:asset.caption,bytes:asset.bytes,format:asset.format}},{status:201});
   }catch(error){
    try{const {deleteCloudinaryAsset}=await import("@/lib/storage/cloudinary");await deleteCloudinaryAsset(uploaded.publicId,uploaded.resourceType);}catch{}
