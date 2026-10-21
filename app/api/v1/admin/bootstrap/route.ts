@@ -35,8 +35,9 @@ export async function POST(request: NextRequest) {
     await connectToDatabase();
     const db = (await import("mongoose")).default.connection.db;
     if (!db) throw new Error("Database connection is not ready.");
+    const lockCollection = db.collection<{ _id: string; createdAt: Date; purpose: string }>("bootstrap_locks");
     try {
-      await db.collection("bootstrap_locks").insertOne({
+      await lockCollection.insertOne({
         _id: "initial-admin",
         createdAt: new Date(),
         purpose: "single-use initial super administrator bootstrap"
@@ -67,7 +68,7 @@ export async function POST(request: NextRequest) {
       try {
         const mongoose = (await import("mongoose")).default;
         if (await User.countDocuments({}) === 0) {
-          await mongoose.connection.db?.collection("bootstrap_locks").deleteOne({ _id: "initial-admin" });
+          await mongoose.connection.db?.collection<{ _id: string }>("bootstrap_locks").deleteOne({ _id: "initial-admin" });
         }
       } catch {
         // Preserve the lock if recovery cannot prove that no administrator was created.

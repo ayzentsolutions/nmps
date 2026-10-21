@@ -1,6 +1,7 @@
 import type { FilterQuery } from "mongoose";
 import {NextRequest,NextResponse} from "next/server";
 import Notice, { type NoticeDocument } from "@/models/Notice";
+import { recordAudit } from "@/lib/audit";
 import {authorize} from "@/lib/permissions";
 import {connectToDatabase} from "@/lib/mongodb";
 import {getSchoolFilter,getSchoolIdForSession} from "@/lib/school";

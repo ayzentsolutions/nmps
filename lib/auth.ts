@@ -27,7 +27,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       return token;
     },
     async session({ session, token }) {
-      if (session.user) { session.user.id = token.sub ?? ""; session.user.role = token.role as import("@/models/User").UserRole; session.user.schoolId = token.schoolId ?? ""; }
+      if (session.user) { session.user.id = token.sub ?? ""; session.user.role = token.role as import("@/models/User").UserRole; session.user.schoolId = String(token.schoolId ?? ""); }
       return session;
     }
   }

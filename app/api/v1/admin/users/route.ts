@@ -2,6 +2,7 @@ import type { FilterQuery } from "mongoose";
 import {NextRequest,NextResponse} from "next/server";
 import bcrypt from "bcryptjs";
 import User, { type UserDocument } from "@/models/User";
+import { recordAudit } from "@/lib/audit";
 import {authorize} from "@/lib/permissions";
 import {connectToDatabase} from "@/lib/mongodb";
 import {getDefaultSchoolId,getSchoolFilter} from "@/lib/school";
