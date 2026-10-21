@@ -1,5 +1,6 @@
+import type { FilterQuery } from "mongoose";
 import {NextRequest,NextResponse} from "next/server";
-import Notice from "@/models/Notice";
+import Notice, { type NoticeDocument } from "@/models/Notice";
 import {authorize} from "@/lib/permissions";
 import {connectToDatabase} from "@/lib/mongodb";
 import {getSchoolFilter,getSchoolIdForSession} from "@/lib/school";
@@ -10,7 +11,7 @@ export async function GET(request:NextRequest){
  const access=await authorize("notices:read");if(access.response)return access.response;if(!access.session)return apiError("Authentication required.",401);
  try{
   await connectToDatabase();
-  const filter:Record<string,unknown>={...getSchoolFilter(access.session)};
+  const filter:FilterQuery<NoticeDocument>={...getSchoolFilter(access.session)};
   const status=request.nextUrl.searchParams.get("status");if(status&&["draft","published","archived"].includes(status))filter.status=status;
   const q=request.nextUrl.searchParams.get("q")?.trim().slice(0,80);if(q)filter.$or=[{title:{$regex:q,$options:"i"}},{category:{$regex:q,$options:"i"}}];
   const page=Math.max(1,Number(request.nextUrl.searchParams.get("page")||1));const limit=Math.min(50,Math.max(1,Number(request.nextUrl.searchParams.get("limit")||20)));
