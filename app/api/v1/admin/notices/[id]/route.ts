@@ -8,7 +8,7 @@ import {noticeUpdateSchema} from "@/lib/validations/notice";
 import {apiError,internalError,validationError} from "@/lib/api-response";
 type Context={params:Promise<{id:string}>};
 export async function PUT(request:NextRequest,context:Context){
- const access=await authorize("notices:manage");if(access.response)return access.response;if(!access.session)return apiError("Authentication required.",401);
+ const access=await authorize("notices:update");if(access.response)return access.response;if(!access.session)return apiError("Authentication required.",401);
  try{
   const {id}=await context.params;if(!mongoose.isValidObjectId(id))return apiError("Invalid notice ID.",400);
   const parsed=noticeUpdateSchema.safeParse(await request.json().catch(()=>null));if(!parsed.success)return validationError(parsed.error);
@@ -23,7 +23,7 @@ export async function PUT(request:NextRequest,context:Context){
  }catch(error){return internalError(error);}
 }
 export async function DELETE(_request:NextRequest,context:Context){
- const access=await authorize("notices:manage");if(access.response)return access.response;if(!access.session)return apiError("Authentication required.",401);
+ const access=await authorize("notices:delete");if(access.response)return access.response;if(!access.session)return apiError("Authentication required.",401);
  try{
   const {id}=await context.params;if(!mongoose.isValidObjectId(id))return apiError("Invalid notice ID.",400);
   await connectToDatabase();const item=await Notice.findOne({_id:id,...getSchoolFilter(access.session)});
