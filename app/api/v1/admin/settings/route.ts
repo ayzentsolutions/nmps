@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { authorize } from "@/lib/permissions";
 import { connectToDatabase } from "@/lib/mongodb";
 import SiteSettings from "@/models/SiteSettings";
+import { recordAudit } from "@/lib/audit";
 import { getDefaultSchoolId, getSchoolIdForSession } from "@/lib/school";
 import { getSiteSettings } from "@/lib/services/settings";
 import { settingsSchema } from "@/lib/validations/settings";
@@ -24,6 +25,7 @@ export async function PUT(request:NextRequest){
   const schoolId=getSchoolIdForSession(access.session);
   await connectToDatabase();
   const saved=await SiteSettings.findOneAndUpdate({schoolId},{$set:parsed.data,$setOnInsert:{schoolId}},{upsert:true,new:true,runValidators:true,setDefaultsOnInsert:true});
+  await recordAudit({ schoolId, actorId: access.session.user.id, actorRole: access.session.user.role, action: "settings.updated", targetType: "site-settings", targetId: String(saved._id), metadata: { schoolName: saved.schoolName } });
   return NextResponse.json({data:saved});
  }catch(error){return internalError(error);}
 }
