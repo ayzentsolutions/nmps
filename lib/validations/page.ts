@@ -40,6 +40,8 @@ export const pageContentSchema = z.object({
   blocks: z.array(blockSchema).max(100),
   seo: z.object({ title: z.string().trim().max(70).default(""), description: z.string().trim().max(180).default(""), ogImage: z.string().trim().max(1000).refine((value)=>value===""||/^https:\/\/\\S+$/i.test(value),"Use a secure HTTPS URL or leave blank.").default("") }).default({ title: "", description: "", ogImage: "" })
 });
+const reservedSlugs = new Set(["admin","api","admissions","contact","notices","events","gallery","robots","sitemap","favicon","manifest"]);
+
 export const createPageSchema = z.object({
   title: z.string().trim().min(1).max(160),
   slug: z.string().trim().min(1).max(180).regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/, "Use lowercase letters, numbers and hyphens."),
