@@ -7,6 +7,7 @@ import {applicationSchema} from "@/lib/validations/admissions";
 import {publicEnquirySchema} from "@/lib/validations/enquiry";
 import {settingsSchema} from "@/lib/validations/settings";
 import {passwordResetRequestSchema,passwordResetCompleteSchema} from "@/lib/validations/password-reset";
+import {changePasswordSchema} from "@/lib/validations/change-password";
 
 describe("page schemas",()=>{
  it("accepts a valid slug and known block types",()=>{
@@ -90,5 +91,14 @@ describe("password reset validation",()=>{
  it("requires a reset token and a 14-character minimum password",()=>{
   expect(passwordResetCompleteSchema.safeParse({token:"a".repeat(43),password:"a-long-unique-passphrase"}).success).toBe(true);
   expect(passwordResetCompleteSchema.safeParse({token:"short",password:"too-short"}).success).toBe(false);
+ });
+});
+
+
+describe("first-login password change validation",()=>{
+ it("requires current password and a strong replacement",()=>{
+  expect(changePasswordSchema.safeParse({currentPassword:"temporary-pass",newPassword:"a-long-unique-passphrase"}).success).toBe(true);
+  expect(changePasswordSchema.safeParse({currentPassword:"",newPassword:"a-long-unique-passphrase"}).success).toBe(false);
+  expect(changePasswordSchema.safeParse({currentPassword:"temporary-pass",newPassword:"short"}).success).toBe(false);
  });
 });
