@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import mongoose from "mongoose";
 import { revalidatePath, revalidateTag } from "next/cache";
 import Page from "@/models/Page";
+import { recordAudit } from "@/lib/audit";
 import { authorize } from "@/lib/permissions";
 import { connectToDatabase } from "@/lib/mongodb";
 import { getSchoolFilter } from "@/lib/school";
@@ -21,6 +22,7 @@ export async function POST(_request: NextRequest, context: Context) {
     const slug = page.slug;
     const updated = await unpublishPage(page, access.session.user.id);
     revalidatePath("/"); revalidatePath("/" + slug); revalidateTag("school-pages");
+    await recordAudit({ schoolId: updated.schoolId, actorId: access.session.user.id, actorRole: access.session.user.role, action: "page.unpublished", targetType: "page", targetId: String(updated._id), metadata: { slug } });
     return NextResponse.json({ data: serializePage(updated) });
   } catch (error) { return internalError(error); }
 }
