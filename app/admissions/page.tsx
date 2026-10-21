@@ -1,8 +1,8 @@
 "use client";
-import Link from "next/link";
-import {useState,type FormEvent} from "react";
-import {ArrowLeft,CheckCircle2,GraduationCap,ShieldCheck} from "lucide-react";
-import {PublicSiteHeader,PublicSiteFooter} from "@/components/public-site/public-site-chrome";
+
+import {useState, type FormEvent} from "react";
+import {CheckCircle2, GraduationCap, ShieldCheck} from "lucide-react";
+import {PublicSiteHeader, PublicSiteFooter} from "@/components/public-site/public-site-chrome";
 const initial={admissionSession:"2027-2028",studentName:"",dateOfBirth:"",gradeApplied:"",parentName:"",parentEmail:"",parentPhone:"",address:""};
 export default function AdmissionsPage(){
  const [form,setForm]=useState(initial);const [busy,setBusy]=useState(false);const [error,setError]=useState("");const [reference,setReference]=useState("");
