@@ -39,6 +39,7 @@
     "typescript": "^5.7.2",
     "vitest": "^2.1.8",
     "tsx": "^4.19.2",
-    "dotenv": "^16.4.7"
+    "dotenv": "^16.4.7",
+    "@eslint/eslintrc": "^3.2.0"
   }
 }
