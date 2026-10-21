@@ -1,6 +1,7 @@
 import {NextRequest,NextResponse} from "next/server";
 import mongoose from "mongoose";
 import MediaAsset from "@/models/MediaAsset";
+import { recordAudit } from "@/lib/audit";
 import Page from "@/models/Page";
 import SiteSettings from "@/models/SiteSettings";
 import Notice from "@/models/Notice";
@@ -21,7 +22,9 @@ export async function PATCH(request:NextRequest,context:Context){
   const parsed=updateSchema.safeParse(await request.json().catch(()=>null));if(!parsed.success)return validationError(parsed.error);
   await connectToDatabase();const asset=await MediaAsset.findOne({_id:id,...getSchoolFilter(access.session)});if(!asset)return apiError("Asset not found.",404);
   if(parsed.data.title!==undefined)asset.title=parsed.data.title;if(parsed.data.altText!==undefined)asset.altText=parsed.data.altText;if(parsed.data.caption!==undefined)asset.caption=parsed.data.caption;
-  await asset.save();return NextResponse.json({data:{id:String(asset._id),title:asset.title,altText:asset.altText,caption:asset.caption,secureUrl:asset.secureUrl}});
+  await asset.save();
+  await recordAudit({ schoolId: asset.schoolId, actorId: access.session.user.id, actorRole: access.session.user.role, action: "media.updated", targetType: "media-asset", targetId: String(asset._id), metadata: {} });
+  return NextResponse.json({data:{id:String(asset._id),title:asset.title,altText:asset.altText,caption:asset.caption,secureUrl:asset.secureUrl}});
  }catch(error){return internalError(error);}
 }
 export async function DELETE(_request:NextRequest,context:Context){
@@ -39,6 +42,7 @@ export async function DELETE(_request:NextRequest,context:Context){
   ]);
   if(pageRef||settingsRef||noticeRef||eventRef||galleryRef)return apiError("This asset is still referenced by pages, settings, notices, events or gallery albums. Remove those references before deleting it.",409);
   await deleteCloudinaryAsset(asset.publicId,asset.resourceType);await asset.deleteOne();
+  await recordAudit({ schoolId: asset.schoolId, actorId: access.session.user.id, actorRole: access.session.user.role, action: "media.deleted", targetType: "media-asset", targetId: String(asset._id), metadata: { resourceType: asset.resourceType } });
   return new NextResponse(null,{status:204});
  }catch(error){return internalError(error);}
 }
