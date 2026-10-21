@@ -1,6 +1,7 @@
 import {NextRequest,NextResponse} from "next/server";
 import mongoose from "mongoose";
 import User from "@/models/User";
+import { recordAudit } from "@/lib/audit";
 import {authorize} from "@/lib/permissions";
 import {connectToDatabase} from "@/lib/mongodb";
 import {getSchoolFilter} from "@/lib/school";
@@ -24,6 +25,7 @@ export async function PATCH(request:NextRequest,context:Context){
   if(input.isActive!==undefined)user.isActive=input.isActive;
   if(isSuperAdmin&&input.schoolId!==undefined)user.schoolId=input.schoolId;
   await user.save();
+  await recordAudit({ schoolId: user.schoolId, actorId: access.session.user.id, actorRole: access.session.user.role, action: "user.updated", targetType: "user", targetId: String(user._id), metadata: { role: user.role, isActive: user.isActive } });
   return NextResponse.json({data:{id:String(user._id),name:user.name,email:user.email,role:user.role,schoolId:user.schoolId,isActive:user.isActive,updatedAt:user.updatedAt}});
  }catch(error){return internalError(error);}
 }
