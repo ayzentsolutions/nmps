@@ -20,7 +20,7 @@ export async function GET(request:NextRequest){
  }catch(error){return internalError(error);}
 }
 export async function POST(request:NextRequest){
- const access=await authorize("notices:manage");if(access.response)return access.response;if(!access.session)return apiError("Authentication required.",401);
+ const access=await authorize("notices:create");if(access.response)return access.response;if(!access.session)return apiError("Authentication required.",401);
  const parsed=noticeSchema.safeParse(await request.json().catch(()=>null));if(!parsed.success)return validationError(parsed.error);
  try{
   await connectToDatabase();
