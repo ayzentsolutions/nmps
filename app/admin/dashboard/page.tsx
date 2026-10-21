@@ -2,13 +2,15 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { auth, signOut } from "@/lib/auth";
-import { LayoutDashboard, PanelsTopLeft, Image, Bell, CalendarDays, ArrowUpRight, LogOut, Settings } from "lucide-react";
+import { LayoutDashboard, PanelsTopLeft, Image, Bell, CalendarDays, ArrowUpRight, LogOut, Settings, ClipboardList, MessageSquare } from "lucide-react";
 export const metadata:Metadata={title:"Admin dashboard",robots:{index:false,follow:false}};
 const modules=[
  {title:"Pages & visual builder",body:"Create and compose pages with reusable content blocks.",href:"/admin/pages",icon:PanelsTopLeft,tone:"bg-teal/10 text-teal"},
  {title:"Media library",body:"Central image and document library. Upload workflow is not yet enabled.",href:"/admin/pages",icon:Image,tone:"bg-amber-100 text-amber-800"},
  {title:"Notices & circulars",body:"Create, schedule, publish and expire school notices and circulars.",href:"/admin/notices",icon:Bell,tone:"bg-blue-100 text-blue-800"},
  {title:"Events & galleries",body:"Event and gallery publishing will be connected in a later batch.",href:"/admin/pages",icon:CalendarDays,tone:"bg-violet-100 text-violet-800"},
+ {title:"Admissions",body:"Review applications, update status and record staff-only notes.",href:"/admin/admissions",icon:ClipboardList,tone:"bg-orange-100 text-orange-800"},
+ {title:"Enquiries CRM",body:"Assign enquiries, track their lifecycle and schedule follow-ups.",href:"/admin/enquiries",icon:MessageSquare,tone:"bg-cyan-100 text-cyan-800"},
  {title:"Website settings",body:"Update the school identity, theme tokens, navigation, contact and footer.",href:"/admin/settings",icon:Settings,tone:"bg-slate-100 text-slate-800"}
 ];
 export default async function Dashboard(){
