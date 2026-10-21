@@ -19,7 +19,7 @@ export async function POST(_request: NextRequest, context: Context) {
     await connectToDatabase();
     const page = await Page.findOne({ _id: id, ...getSchoolFilter(access.session) });
     if (!page) return apiError("Page not found.", 404);
-    const slug = page.slug;
+    const slug = page.publishedSlug || page.slug;
     const updated = await unpublishPage(page, access.session.user.id);
     revalidatePath("/"); revalidatePath("/" + slug); revalidateTag("school-pages");
     await recordAudit({ schoolId: updated.schoolId, actorId: access.session.user.id, actorRole: access.session.user.role, action: "page.unpublished", targetType: "page", targetId: String(updated._id), metadata: { slug } });
