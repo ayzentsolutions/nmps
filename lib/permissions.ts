@@ -1,0 +1,16 @@
+import { NextResponse } from "next/server";
+import { auth } from "@/lib/auth";
+export type Permission = "pages:read" | "pages:create" | "pages:update" | "pages:publish" | "pages:delete" | "users:manage" | "settings:manage" | "media:manage" | "admissions:manage" | "enquiries:manage";
+const grants: Record<string, Permission[]> = {
+  super_admin: ["pages:read","pages:create","pages:update","pages:publish","pages:delete","users:manage","settings:manage","media:manage","admissions:manage","enquiries:manage"],
+  school_admin: ["pages:read","pages:create","pages:update","pages:publish","pages:delete","users:manage","settings:manage","media:manage","admissions:manage","enquiries:manage"],
+  editor: ["pages:read","pages:create","pages:update","media:manage"],
+  publisher: ["pages:read","pages:publish"], admissions_staff: ["admissions:manage"],
+  enquiry_staff: ["enquiries:manage"], media_manager: ["media:manage"]
+};
+export async function authorize(permission: Permission) {
+  const session = await auth();
+  if (!session?.user?.id) return { session: null, response: NextResponse.json({ error: "Authentication required." }, { status: 401 }) };
+  if (!(grants[session.user.role] ?? []).includes(permission)) return { session: null, response: NextResponse.json({ error: "You do not have permission to perform this action." }, { status: 403 }) };
+  return { session, response: null };
+}
