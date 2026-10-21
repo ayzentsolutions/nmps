@@ -16,6 +16,12 @@ describe("page schemas",()=>{
   expect(createPageSchema.safeParse({title:"Bad",slug:"../admin"}).success).toBe(false);
   expect(pageContentSchema.safeParse({blocks:[{id:"x",type:"script",code:"alert(1)"}]}).success).toBe(false);
  });
+ it("supports schema-validated photo and video content blocks",()=>{
+  expect(pageContentSchema.safeParse({blocks:[{id:"image-1",type:"imageText",title:"Library",body:"A quiet learning space.",imageUrl:"https://res.cloudinary.com/example/image/upload/library.jpg",imageAlt:"Library shelves"}]}).success).toBe(true);
+  expect(pageContentSchema.safeParse({blocks:[{id:"video-1",type:"videoEmbed",title:"School life",videoUrl:"https://www.youtube.com/watch?v=dQw4w9WgXcQ",caption:"A short introduction"}]}).success).toBe(true);
+  expect(pageContentSchema.safeParse({blocks:[{id:"video-2",type:"videoEmbed",videoUrl:"https://malicious.example/video"}]}).success).toBe(false);
+  expect(pageContentSchema.safeParse({blocks:[{id:"image-2",type:"imageText",imageUrl:"javascript:alert(1)"}]}).success).toBe(false);
+ });
  it("rejects an excessive number of blocks",()=>{
   const blocks=Array.from({length:101},(_,i)=>({id:String(i),type:"richText",title:"Text",body:"Body"}));
   expect(pageContentSchema.safeParse({blocks}).success).toBe(false);
