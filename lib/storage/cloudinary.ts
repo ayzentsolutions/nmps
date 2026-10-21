@@ -1,5 +1,6 @@
 import {v2 as cloudinary} from "cloudinary";
 import {Readable} from "node:stream";
+import {randomUUID} from "node:crypto";
 
 export function configureCloudinary(){
  const cloudName=process.env.CLOUDINARY_CLOUD_NAME;
@@ -13,8 +14,8 @@ export async function uploadMediaBuffer(input:{
  buffer:Buffer;schoolId:string;fileName:string;resourceType:"image"|"raw";mimeType:string;
 }){
  const client=configureCloudinary();
- const originalBase=input.fileName.replace(/\\.[^.]+$/,"").replace(/[^a-zA-Z0-9_-]+/g,"-").replace(/^-+|-+$/g,"").slice(0,70)||"asset";
- const suffix=crypto.randomUUID();
+ const originalBase=input.fileName.replace(/\.[^.]+$/,"").replace(/[^a-zA-Z0-9_-]+/g,"-").replace(/^-+|-+$/g,"").slice(0,70)||"asset";
+ const suffix=randomUUID();
  const publicId=input.resourceType==="raw"?originalBase+"-"+suffix+".pdf":originalBase+"-"+suffix;
  return new Promise<{publicId:string;secureUrl:string;resourceType:"image"|"raw";format:string;bytes:number}>((resolve,reject)=>{
   const stream=client.uploader.upload_stream({
