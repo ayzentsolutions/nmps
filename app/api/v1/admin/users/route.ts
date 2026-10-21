@@ -1,6 +1,7 @@
+import type { FilterQuery } from "mongoose";
 import {NextRequest,NextResponse} from "next/server";
 import bcrypt from "bcryptjs";
-import User from "@/models/User";
+import User, { type UserDocument } from "@/models/User";
 import {authorize} from "@/lib/permissions";
 import {connectToDatabase} from "@/lib/mongodb";
 import {getDefaultSchoolId,getSchoolFilter} from "@/lib/school";
@@ -10,7 +11,7 @@ export const dynamic="force-dynamic";
 export async function GET(request:NextRequest){
  const access=await authorize("users:manage");if(access.response)return access.response;if(!access.session)return apiError("Authentication required.",401);
  try{
-  await connectToDatabase();const filter:Record<string,unknown>={...getSchoolFilter(access.session)};
+  await connectToDatabase();const filter:FilterQuery<UserDocument>={...getSchoolFilter(access.session)};
   const q=request.nextUrl.searchParams.get("q")?.trim().slice(0,80);if(q)filter.$or=[{name:{$regex:q,$options:"i"}},{email:{$regex:q,$options:"i"}}];
   const role=request.nextUrl.searchParams.get("role");if(role&&["super_admin","school_admin","editor","publisher","admissions_staff","enquiry_staff","media_manager"].includes(role))filter.role=role;
   const page=Math.max(1,Number(request.nextUrl.searchParams.get("page")||1));const limit=Math.min(50,Math.max(1,Number(request.nextUrl.searchParams.get("limit")||50)));
