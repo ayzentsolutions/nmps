@@ -1,6 +1,7 @@
 import {NextRequest,NextResponse} from "next/server";
 import mongoose from "mongoose";
 import Enquiry from "@/models/Enquiry";
+import { recordAudit } from "@/lib/audit";
 import User from "@/models/User";
 import {authorize} from "@/lib/permissions";
 import {connectToDatabase} from "@/lib/mongodb";
@@ -42,6 +43,7 @@ export async function PATCH(request:NextRequest,context:Context){
    followUp.completedAt=new Date();
   }
   await enquiry.save();
+  await recordAudit({ schoolId: enquiry.schoolId, actorId: access.session.user.id, actorRole: access.session.user.role, action: "enquiry.updated", targetType: "enquiry", targetId: String(enquiry._id), metadata: { status: enquiry.status, assignedTo: enquiry.assignedTo, followUpCount: enquiry.followUps.length } });
   return NextResponse.json({data:{id:String(enquiry._id),referenceNumber:enquiry.referenceNumber,status:enquiry.status,assignedTo:enquiry.assignedTo,internalNotes:enquiry.internalNotes,followUps:enquiry.followUps,statusHistory:enquiry.statusHistory,updatedAt:enquiry.updatedAt}});
  }catch(error){return internalError(error);}
 }
