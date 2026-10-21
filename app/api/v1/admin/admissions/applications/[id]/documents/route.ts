@@ -40,6 +40,8 @@ export async function POST(request:NextRequest,context:Context){
   if(candidate.type&&candidate.type!==detected.mimeType)return apiError("File type does not match file contents.",415);
   await connectToDatabase();const app=await AdmissionApplication.findOne({_id:id,...getSchoolFilter(access.session)});
   if(!app)return apiError("Application not found.",404);
+  const existingCount=await ApplicationDocument.countDocuments({schoolId:app.schoolId,applicationId:app._id});
+  if(existingCount>=20)return apiError("An application may have at most 20 private documents.",409);
   const uploaded=await uploadPrivateDocumentBuffer({buffer,schoolId:app.schoolId,fileName:candidate.name,mimeType:detected.mimeType});
   try{
    const doc=await ApplicationDocument.create({schoolId:app.schoolId,applicationId:app._id,publicId:uploaded.publicId,originalFilename:candidate.name.replaceAll("/","_").replaceAll("\\","_").replace(/[\r\n]/g,"_").slice(0,255),mimeType:detected.mimeType,format:uploaded.format||detected.format,bytes:uploaded.bytes,uploadedBy:access.session.user.id});
