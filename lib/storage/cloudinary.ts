@@ -33,3 +33,38 @@ export async function deleteCloudinaryAsset(publicId:string,resourceType:"image"
  const client=configureCloudinary();
  return client.uploader.destroy(publicId,{resource_type:resourceType,type:"upload",invalidate:true});
 }
+
+export async function uploadPrivateDocumentBuffer(input: {
+  buffer: Buffer; schoolId: string; fileName: string; mimeType: string;
+}) {
+  const client = configureCloudinary();
+  const originalBase = input.fileName.replace(/\.[^.]+$/, "").replace(/[^a-zA-Z0-9_-]+/g, "-").replace(/^-+|-+$/g, "").slice(0, 70) || "document";
+  const publicId = originalBase + "-" + randomUUID();
+  return new Promise<{ publicId: string; format: string; bytes: number }>((resolve, reject) => {
+    const stream = client.uploader.upload_stream({
+      folder: "nmps/" + input.schoolId + "/private-admissions",
+      public_id: publicId,
+      resource_type: "raw",
+      type: "authenticated",
+      access_mode: "authenticated",
+      overwrite: false,
+      unique_filename: false,
+      use_filename: false,
+      context: { mime_type: input.mimeType }
+    }, (error, result) => {
+      if (error || !result) { reject(error || new Error("Private storage returned no document.")); return; }
+      resolve({ publicId: result.public_id, format: result.format || "", bytes: result.bytes || input.buffer.length });
+    });
+    Readable.from(input.buffer).pipe(stream);
+  });
+}
+
+export function createPrivateDocumentDownloadUrl(publicId: string, format: string, ttlSeconds = 120) {
+  const client = configureCloudinary();
+  return client.utils.private_download_url(publicId, format, {
+    resource_type: "raw",
+    type: "authenticated",
+    attachment: true,
+    expires_at: Math.floor(Date.now() / 1000) + ttlSeconds
+  });
+}
