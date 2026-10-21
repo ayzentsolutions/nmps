@@ -3,7 +3,7 @@ import mongoose from "mongoose";
 import User from "@/models/User";
 import {authorize} from "@/lib/permissions";
 import {connectToDatabase} from "@/lib/mongodb";
-import {getSchoolFilter,getDefaultSchoolId} from "@/lib/school";
+import {getSchoolFilter} from "@/lib/school";
 import {updateUserSchema} from "@/lib/validations/user";
 import {apiError,internalError,validationError} from "@/lib/api-response";
 type Context={params:Promise<{id:string}>};
