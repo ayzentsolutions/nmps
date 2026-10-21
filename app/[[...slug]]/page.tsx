@@ -53,6 +53,14 @@ function getVideoEmbedUrl(raw: string) {
 
 function RenderBlock({ block }: { block: PageBlock }) {
   if (!block.visible) return null;
+  if (block.type === "imageGallery") {
+    const photos = Array.isArray(block.items) ? block.items.filter((item) => item.imageUrl) : [];
+    return <section className="section-pad"><div className="container-site">{block.title ? <h2 className="mb-6 text-2xl font-bold text-ink md:text-3xl">{block.title}</h2> : null}<div className="grid grid-cols-2 gap-3 md:grid-cols-3 lg:grid-cols-4">{photos.map((photo) => <figure key={photo.id} className="overflow-hidden rounded-xl bg-white shadow-soft"><img src={photo.imageUrl} alt={photo.altText || ""} loading="lazy" className="aspect-[4/3] w-full object-cover"/>{photo.caption ? <figcaption className="p-3 text-sm text-slate-600">{photo.caption}</figcaption> : null}</figure>)}</div></div></section>;
+  }
+  if (block.type === "downloadList") {
+    const docs = Array.isArray(block.items) ? block.items.filter((item) => item.fileUrl) : [];
+    return <section className="section-pad"><div className="container-site"><div className="mx-auto max-w-4xl"><h2 className="text-2xl font-bold text-ink md:text-3xl">{block.title || "Downloads and documents"}</h2><div className="mt-5 grid gap-3 sm:grid-cols-2">{docs.map((doc,index) => <article key={index} className="rounded-xl border border-slate-200 bg-white p-4"><h3 className="font-bold text-ink">{doc.title || "School document"}</h3>{doc.description ? <p className="mt-2 text-sm leading-6 text-slate-600">{doc.description}</p> : null}<a href={doc.fileUrl} target="_blank" rel="noopener noreferrer" className="mt-4 inline-flex rounded-full bg-teal px-4 py-2 text-sm font-bold text-white">Open document</a></article>)}</div></div></div></section>;
+  }
   if (block.type === "videoEmbed") {
     const embedUrl = getVideoEmbedUrl(String(block.videoUrl || ""));
     if (!embedUrl) return null;
