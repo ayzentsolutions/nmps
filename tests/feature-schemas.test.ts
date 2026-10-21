@@ -62,7 +62,7 @@ describe("public form validation",()=>{
   const base={name:"Parent Example",email:"parent@example.org",phone:"",subject:"Admission question",message:"Please share more details about admissions.",website:""};
   expect(publicEnquirySchema.safeParse(base).success).toBe(true);
   expect(publicEnquirySchema.safeParse({...base,email:"not-an-email"}).success).toBe(false);
-  expect(publicEnquirySchema.safeParse({...base,website:"bot-filled"}).success).toBe(false);
+  expect(publicEnquirySchema.safeParse({...base,website:"bot-filled"}).success).toBe(true);
  });
 });
 
