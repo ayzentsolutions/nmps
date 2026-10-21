@@ -14,6 +14,7 @@ describe("page schemas",()=>{
  });
  it("rejects path tricks and unknown executable block types",()=>{
   expect(createPageSchema.safeParse({title:"Bad",slug:"../admin"}).success).toBe(false);
+  expect(createPageSchema.safeParse({title:"Events",slug:"events"}).success).toBe(false);
   expect(pageContentSchema.safeParse({blocks:[{id:"x",type:"script",code:"alert(1)"}]}).success).toBe(false);
  });
  it("supports schema-validated photo and video content blocks",()=>{
