@@ -23,6 +23,10 @@ describe("page schemas",()=>{
   expect(pageContentSchema.safeParse({blocks:[{id:"video-2",type:"videoEmbed",videoUrl:"https://malicious.example/video"}]}).success).toBe(false);
   expect(pageContentSchema.safeParse({blocks:[{id:"image-2",type:"imageText",imageUrl:"javascript:alert(1)"}]}).success).toBe(false);
  });
+ it("validates a gallery and download-list block",()=>{
+  expect(pageContentSchema.safeParse({blocks:[{id:"g-1",type:"imageGallery",title:"Campus",items:[{id:"p-1",imageUrl:"https://res.cloudinary.com/example/image/upload/campus.jpg",altText:"Campus",caption:"The campus"}]}]}).success).toBe(true);
+  expect(pageContentSchema.safeParse({blocks:[{id:"d-1",type:"downloadList",title:"Documents",items:[{title:"Calendar",description:"Term dates",fileUrl:"https://res.cloudinary.com/example/raw/upload/calendar.pdf"}]}]}).success).toBe(true);
+ });
  it("rejects an excessive number of blocks",()=>{
   const blocks=Array.from({length:101},(_,i)=>({id:String(i),type:"richText",title:"Text",body:"Body"}));
   expect(pageContentSchema.safeParse({blocks}).success).toBe(false);
