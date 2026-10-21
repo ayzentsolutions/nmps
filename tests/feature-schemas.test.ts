@@ -68,7 +68,7 @@ describe("public form validation",()=>{
 
 describe("website setting validation",()=>{
  it("requires hex colour tokens and safe navigation URLs",()=>{
-  const base={schoolName:"Example School",tagline:"Learn",logoUrl:"",faviconUrl:"",theme:{primaryColor:"#10233f",accentColor:"#1d837c",highlightColor:"#d9b36c",bodyFont:"Arial",containerWidth:"standard",sectionSpacing:"comfortable"},navigation:[{id:"home",label:"Home",href:"/",children:[]}],contact:{address:"",email:"",phone:""},socialLinks:[],announcement:{enabled:false,message:"",href:""},footerText:"",seo:{title:"Example School",description:"A school description",ogImage:""}};
+  const base={schoolName:"Example School",tagline:"Learn",logoUrl:"",faviconUrl:"",theme:{primaryColor:"#10233f",accentColor:"#1d837c",highlightColor:"#d9b36c",bodyFont:"Inter",containerWidth:"standard",sectionSpacing:"comfortable"},navigation:[{id:"home",label:"Home",href:"/",children:[]}],contact:{address:"",email:"",phone:""},socialLinks:[],announcement:{enabled:false,message:"",href:""},footerText:"",seo:{title:"Example School",description:"A school description",ogImage:""}};
   expect(settingsSchema.safeParse(base).success).toBe(true);
   expect(settingsSchema.safeParse({...base,theme:{...base.theme,primaryColor:"red"}}).success).toBe(false);
   expect(settingsSchema.safeParse({...base,navigation:[{id:"bad",label:"Bad",href:"//evil.example",children:[]}]}).success).toBe(false);
