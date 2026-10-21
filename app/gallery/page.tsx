@@ -1,10 +1,10 @@
 import type {Metadata} from "next";
 import Link from "next/link";
-import {Images,Image as ImageIcon} from "lucide-react";
+import {Images, Image as ImageIcon} from "lucide-react";
 import GalleryAlbum from "@/models/GalleryAlbum";
 import {connectToDatabase} from "@/lib/mongodb";
 import {getDefaultSchoolId} from "@/lib/school";
-import {PublicSiteHeader,PublicSiteFooter} from "@/components/public-site/public-site-chrome";
+import {PublicSiteHeader, PublicSiteFooter} from "@/components/public-site/public-site-chrome";
 export const metadata:Metadata={title:"Photo gallery",description:"Published photo albums and school memories."};
 export const dynamic="force-dynamic";
 export default async function GalleryPage(){
