@@ -6,7 +6,7 @@ import { LayoutDashboard, PanelsTopLeft, Image, Bell, CalendarDays, ArrowUpRight
 export const metadata:Metadata={title:"Admin dashboard",robots:{index:false,follow:false}};
 const modules=[
  {title:"Pages & visual builder",body:"Create and compose pages with reusable content blocks.",href:"/admin/pages",icon:PanelsTopLeft,tone:"bg-teal/10 text-teal"},
- {title:"Media library",body:"Central image and document library. Upload workflow is not yet enabled.",href:"/admin/pages",icon:Image,tone:"bg-amber-100 text-amber-800"},
+ {title:"Media library",body:"Upload, search, edit and reuse public images and circular PDFs.",href:"/admin/media",icon:Image,tone:"bg-amber-100 text-amber-800"},
  {title:"Notices & circulars",body:"Create, schedule, publish and expire school notices and circulars.",href:"/admin/notices",icon:Bell,tone:"bg-blue-100 text-blue-800"},
  {title:"Events & galleries",body:"Event and gallery publishing will be connected in a later batch.",href:"/admin/pages",icon:CalendarDays,tone:"bg-violet-100 text-violet-800"},
  {title:"Admissions",body:"Review applications, update status and record staff-only notes.",href:"/admin/admissions",icon:ClipboardList,tone:"bg-orange-100 text-orange-800"},
