@@ -1,10 +1,10 @@
 import type {Metadata} from "next";
-import Link from "next/link";
-import {FileText,ArrowRight,CalendarDays} from "lucide-react";
+
+import {FileText, ArrowRight, CalendarDays} from "lucide-react";
 import Notice from "@/models/Notice";
 import {connectToDatabase} from "@/lib/mongodb";
 import {getDefaultSchoolId} from "@/lib/school";
-import {PublicSiteHeader,PublicSiteFooter} from "@/components/public-site/public-site-chrome";
+import {PublicSiteHeader, PublicSiteFooter} from "@/components/public-site/public-site-chrome";
 export const metadata:Metadata={title:"Notices & circulars",description:"Published school notices, circulars and important updates."};
 export const dynamic="force-dynamic";
 export default async function NoticesPage(){
