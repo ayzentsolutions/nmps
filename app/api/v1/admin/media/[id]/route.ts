@@ -29,7 +29,7 @@ export async function DELETE(_request:NextRequest,context:Context){
   await connectToDatabase();const asset=await MediaAsset.findOne({_id:id,...getSchoolFilter(access.session)});if(!asset)return apiError("Asset not found.",404);
   const url=asset.secureUrl;const schoolId=asset.schoolId;
   const [pageRef,settingsRef,noticeRef]=await Promise.all([
-   Page.exists({schoolId,$or:[{"draftContent.blocks.imageUrl":url,"draftContent.seo.ogImage":url},{"publishedContent.blocks.imageUrl":url,"publishedContent.seo.ogImage":url}]}),
+   Page.exists({schoolId,$or:[{"draftContent.blocks.imageUrl":url},{"draftContent.seo.ogImage":url},{"publishedContent.blocks.imageUrl":url},{"publishedContent.seo.ogImage":url}]}),
    SiteSettings.exists({schoolId,$or:[{logoUrl:url},{faviconUrl:url},{"seo.ogImage":url}]}),
    Notice.exists({schoolId,$or:[{attachmentUrl:url},{publishedAttachmentUrl:url}]})
   ]);
