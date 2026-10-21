@@ -1,5 +1,6 @@
+import type { FilterQuery } from "mongoose";
 import {NextRequest,NextResponse} from "next/server";
-import AdmissionApplication from "@/models/AdmissionApplication";
+import AdmissionApplication, { type AdmissionApplicationDocument } from "@/models/AdmissionApplication";
 import {authorize} from "@/lib/permissions";
 import {connectToDatabase} from "@/lib/mongodb";
 import {getSchoolFilter} from "@/lib/school";
@@ -8,7 +9,7 @@ export const dynamic="force-dynamic";
 export async function GET(request:NextRequest){
  const access=await authorize("admissions:manage");if(access.response)return access.response;if(!access.session)return apiError("Authentication required.",401);
  try{
-  await connectToDatabase();const filter:Record<string,unknown>={...getSchoolFilter(access.session)};
+  await connectToDatabase();const filter:FilterQuery<AdmissionApplicationDocument>={...getSchoolFilter(access.session)};
   const status=request.nextUrl.searchParams.get("status");if(status&&["submitted","under_review","documents_pending","accepted","rejected","withdrawn"].includes(status))filter.status=status;
   const session=request.nextUrl.searchParams.get("session");if(session)filter.admissionSession=session.slice(0,80);
   const q=request.nextUrl.searchParams.get("q")?.trim().slice(0,80);if(q)filter.$or=[{referenceNumber:{$regex:q,$options:"i"}},{studentName:{$regex:q,$options:"i"}},{parentEmail:{$regex:q,$options:"i"}},{parentPhone:{$regex:q,$options:"i"}}];
