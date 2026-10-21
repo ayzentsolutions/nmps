@@ -35,6 +35,25 @@ export const blockSchema = z.discriminatedUnion("type", [hero, richText, cta, st
     title: z.string().trim().max(180).default(""),
     videoUrl: z.string().trim().max(1000).refine((value) => value === "" || /^https:\/\/(?:www\.)?(?:youtube\.com|youtu\.be|vimeo\.com)\//i.test(value), "Use a YouTube or Vimeo HTTPS URL.").default(""),
     caption: z.string().trim().max(500).default("")
+  }),
+  z.object({
+    id: z.string().min(1).max(100), type: z.literal("imageGallery"), visible: z.boolean().default(true),
+    title: z.string().trim().max(180).default(""),
+    items: z.array(z.object({
+      id: z.string().min(1).max(100),
+      imageUrl: z.string().trim().max(1000).refine((value) => value === "" || /^https:\/\/\S+$/i.test(value), "Use an HTTPS image URL.").default(""),
+      altText: z.string().trim().max(300).default(""),
+      caption: z.string().trim().max(500).default("")
+    })).max(24).default([])
+  }),
+  z.object({
+    id: z.string().min(1).max(100), type: z.literal("downloadList"), visible: z.boolean().default(true),
+    title: z.string().trim().max(180).default(""),
+    items: z.array(z.object({
+      title: z.string().trim().max(180).default(""),
+      description: z.string().trim().max(500).default(""),
+      fileUrl: z.string().trim().max(1000).refine((value) => value === "" || /^https:\/\/\S+$/i.test(value), "Use an HTTPS document URL.").default("")
+    })).max(30).default([])
   })]);
 export const pageContentSchema = z.object({
   blocks: z.array(blockSchema).max(100),
