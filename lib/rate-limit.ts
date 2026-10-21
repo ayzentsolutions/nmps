@@ -1,11 +1,10 @@
 import { createHash } from "node:crypto";
-import type { NextRequest } from "next/server";
 import { connectToDatabase } from "@/lib/mongodb";
 
 type LimitResult = { allowed: boolean; retryAfterSeconds: number; remaining: number };
 declare global { var rateLimitIndexesPromise: Promise<void> | undefined; }
 
-export async function checkRateLimit(request: NextRequest, scope: string, maximum: number, windowMs = 60_000): Promise<LimitResult> {
+export async function checkRateLimit(request: Pick<Request, "headers">, scope: string, maximum: number, windowMs = 60_000): Promise<LimitResult> {
   await connectToDatabase();
   const mongoose = (await import("mongoose")).default;
   const collection = mongoose.connection.db?.collection("public_rate_limits");

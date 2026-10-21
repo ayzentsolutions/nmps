@@ -4,6 +4,7 @@ import { z } from "zod";
 import bcrypt from "bcryptjs";
 import { connectToDatabase } from "@/lib/mongodb";
 import User from "@/models/User";
+import { checkRateLimit } from "@/lib/rate-limit";
 
 const schema = z.object({ email: z.string().trim().email().max(254), password: z.string().min(1).max(200) });
 export const { handlers, auth, signIn, signOut } = NextAuth({
@@ -12,7 +13,9 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
   pages: { signIn: "/admin/login" },
   providers: [Credentials({
     credentials: { email: { label: "Email", type: "email" }, password: { label: "Password", type: "password" } },
-    async authorize(credentials) {
+    async authorize(credentials, request) {
+      const limit = await checkRateLimit(request, "staff-login", 10, 15 * 60 * 1000);
+      if (!limit.allowed) return null;
       const parsed = schema.safeParse(credentials);
       if (!parsed.success || !process.env.MONGODB_URI) return null;
       await connectToDatabase();
