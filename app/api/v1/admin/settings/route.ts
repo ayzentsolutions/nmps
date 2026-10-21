@@ -25,7 +25,9 @@ export async function PUT(request:NextRequest){
   const schoolId=getSchoolIdForSession(access.session);
   await connectToDatabase();
   const saved=await SiteSettings.findOneAndUpdate({schoolId},{$set:parsed.data,$setOnInsert:{schoolId}},{upsert:true,new:true,runValidators:true,setDefaultsOnInsert:true});
-  await recordAudit({ schoolId, actorId: access.session.user.id, actorRole: access.session.user.role, action: "settings.updated", targetType: "site-settings", targetId: String(saved._id), metadata: { schoolName: saved.schoolName } });
+
+  const auditScopeId = getSchoolIdForSession(access.session);
+  await recordAudit({ schoolId: auditScopeId, actorId: access.session.user.id, actorRole: access.session.user.role, action: "settings.updated", targetType: "site-settings", targetId: auditScopeId, metadata: {} });
   return NextResponse.json({data:saved});
  }catch(error){return internalError(error);}
 }
