@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import mongoose from "mongoose";
 import { revalidatePath, revalidateTag } from "next/cache";
 import Page from "@/models/Page";
+import { recordAudit } from "@/lib/audit";
 import { authorize } from "@/lib/permissions";
 import { connectToDatabase } from "@/lib/mongodb";
 import { getSchoolFilter } from "@/lib/school";
@@ -20,6 +21,7 @@ export async function POST(_request: NextRequest, context: Context) {
     if (!page) return apiError("Page not found.", 404);
     const published = await publishPage(page, access.session.user.id);
     revalidatePath("/"); revalidatePath("/" + published.slug); revalidateTag("school-pages");
+    await recordAudit({ schoolId: published.schoolId, actorId: access.session.user.id, actorRole: access.session.user.role, action: "page.published", targetType: "page", targetId: String(published._id), metadata: { slug: published.publishedSlug || published.slug, versionNumber: published.versionNumber } });
     return NextResponse.json({ data: serializePage(published) });
   } catch (error) { return internalError(error); }
 }
