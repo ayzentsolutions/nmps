@@ -25,6 +25,7 @@ export async function POST(request:NextRequest){
  try{
   await connectToDatabase();
   const item=await Notice.create({...parsed.data,publishAt:parsed.data.publishAt?new Date(parsed.data.publishAt):null,expiresAt:parsed.data.expiresAt?new Date(parsed.data.expiresAt):null,status:"draft",schoolId:getSchoolIdForSession(access.session),createdBy:access.session.user.id,updatedBy:access.session.user.id});
+  await recordAudit({ schoolId: item.schoolId, actorId: access.session.user.id, actorRole: access.session.user.role, action: "notice.created", targetType: "notice", targetId: String(item._id), metadata: { category: item.category } });
   return NextResponse.json({data:{id:String(item._id),title:item.title,status:item.status}},{status:201});
  }catch(error){return internalError(error);}
 }
