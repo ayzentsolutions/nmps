@@ -32,10 +32,19 @@ export async function checkRateLimit(request: NextRequest, scope: string, maximu
   const key = scope + ":" + createHash("sha256").update(ip).digest("hex").slice(0, 32) + ":" + bucket;
   const expiresAt = new Date((bucket + 2) * windowMs);
 
-  await collection.updateOne({ key }, {
-    $inc: { count: 1 },
-    $setOnInsert: { key, scope, expiresAt, createdAt: new Date(now) }
-  }, { upsert: true });
+  try {
+    await collection.updateOne({ key }, {
+      $inc: { count: 1 },
+      $setOnInsert: { key, scope, expiresAt, createdAt: new Date(now) }
+    }, { upsert: true });
+  } catch (error) {
+    // A concurrent first request can race on the unique bucket key. Retry as an update.
+    if (error && typeof error === "object" && "code" in error && error.code === 11000) {
+      await collection.updateOne({ key }, { $inc: { count: 1 } }, { upsert: false });
+    } else {
+      throw error;
+    }
+  }
   const record = await collection.findOne({ key }, { projection: { count: 1 } });
   const count = Number(record?.count || 0);
   const retryAfterSeconds = Math.max(1, Math.ceil(((bucket + 1) * windowMs - now) / 1000));
