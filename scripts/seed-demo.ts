@@ -52,9 +52,7 @@ async function main(){
   ["Achievements","achievements"],
   ["Student Activities","student-activities"],
   ["Video Gallery","video-gallery"],
-  ["Mandatory Disclosures","mandatory-disclosures"],
-  ["Privacy Policy","privacy-policy"],
-  ["Terms and Conditions","terms-and-conditions"]
+  ["Mandatory Disclosures","mandatory-disclosures"]
  ] as const;
  for(const [title,slug] of starterDrafts){
   const content=pageContentSchema.parse({blocks:[{id:"starter-"+slug,type:"richText",visible:true,title,body:"This is an unpublished starter draft. Replace this text with approved school information in the CMS, review it, and publish when ready."}],seo:{title:title+" | Example School",description:"Add the approved "+title.toLowerCase()+" content for your school.",ogImage:""}});
