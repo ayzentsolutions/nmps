@@ -42,7 +42,7 @@ export async function POST(request:NextRequest,context:Context){
   if(!app)return apiError("Application not found.",404);
   const uploaded=await uploadPrivateDocumentBuffer({buffer,schoolId:app.schoolId,fileName:candidate.name,mimeType:detected.mimeType});
   try{
-   const doc=await ApplicationDocument.create({schoolId:app.schoolId,applicationId:app._id,publicId:uploaded.publicId,originalFilename:candidate.name.replace(/[\\/\r\n]/g,"_").slice(0,255),mimeType:detected.mimeType,format:uploaded.format||detected.format,bytes:uploaded.bytes,uploadedBy:access.session.user.id});
+   const doc=await ApplicationDocument.create({schoolId:app.schoolId,applicationId:app._id,publicId:uploaded.publicId,originalFilename:candidate.name.replaceAll("/","_").replaceAll("\\","_").replace(/[\r\n]/g,"_").slice(0,255),mimeType:detected.mimeType,format:uploaded.format||detected.format,bytes:uploaded.bytes,uploadedBy:access.session.user.id});
    await recordAudit({schoolId:app.schoolId,actorId:access.session.user.id,actorRole:access.session.user.role,action:"admission-document.uploaded",targetType:"admission-document",targetId:String(doc._id),metadata:{applicationId:String(app._id),mimeType:doc.mimeType,bytes:doc.bytes}});
    return NextResponse.json({data:{id:String(doc._id),filename:doc.originalFilename,mimeType:doc.mimeType,bytes:doc.bytes}},{status:201,headers:{"Cache-Control":"no-store"}});
   }catch(error){
