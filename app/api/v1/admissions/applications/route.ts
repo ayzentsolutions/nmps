@@ -1,6 +1,7 @@
 import {randomBytes} from "node:crypto";
+import type { HydratedDocument } from "mongoose";
 import {NextRequest,NextResponse} from "next/server";
-import AdmissionApplication from "@/models/AdmissionApplication";
+import AdmissionApplication, { type AdmissionApplicationDocument } from "@/models/AdmissionApplication";
 import ApplicationDocument from "@/models/ApplicationDocument";
 import {connectToDatabase} from "@/lib/mongodb";
 import {getDefaultSchoolId} from "@/lib/school";
@@ -74,7 +75,7 @@ export async function POST(request:NextRequest){
   const schoolId=getDefaultSchoolId();
   const referenceNumber="NMPS-"+new Date().getUTCFullYear()+"-"+randomBytes(5).toString("hex").toUpperCase();
   const uploadedPublicIds:string[]=[];
-  let application:Awaited<ReturnType<typeof AdmissionApplication.create>>|null=null;
+  let application:HydratedDocument<AdmissionApplicationDocument>|null=null;
 
   try{
    application=await AdmissionApplication.create({
