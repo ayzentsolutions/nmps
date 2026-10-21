@@ -47,6 +47,9 @@ export async function authorize(permission: Permission) {
       response: NextResponse.json({ error: "Authentication required." }, { status: 401 })
     };
   }
+  if (session.user.mustChangePassword) {
+    return { session: null, response: NextResponse.json({ error: "Change your temporary password before using the admin workspace.", code: "PASSWORD_CHANGE_REQUIRED" }, { status: 403 }) };
+  }
   if (!(grants[session.user.role] ?? []).includes(permission)) {
     return {
       session: null,

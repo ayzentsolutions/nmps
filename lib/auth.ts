@@ -21,16 +21,55 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       await connectToDatabase();
       const user = await User.findOne({ email: parsed.data.email.toLowerCase(), isActive: true }).select("+passwordHash");
       if (!user || !(await bcrypt.compare(parsed.data.password, user.passwordHash))) return null;
-      return { id: String(user._id), name: user.name, email: user.email, role: user.role, schoolId: user.schoolId };
+      return {
+        id: String(user._id), name: user.name, email: user.email, role: user.role, schoolId: user.schoolId,
+        mustChangePassword: Boolean(user.mustChangePassword), sessionVersion: Number(user.sessionVersion || 0)
+      };
     }
   })],
   callbacks: {
     async jwt({ token, user }) {
-      if (user) { token.role = user.role; token.schoolId = user.schoolId; token.name = user.name; token.email = user.email; }
+      if (user) {
+        token.role = user.role;
+        token.schoolId = user.schoolId;
+        token.mustChangePassword = Boolean(user.mustChangePassword);
+        token.sessionVersion = Number(user.sessionVersion || 0);
+        token.name = user.name;
+        token.email = user.email;
+        return token;
+      }
+      if (token.sub && process.env.MONGODB_URI) {
+        try {
+          await connectToDatabase();
+          const current = await User.findById(token.sub).select("name email role schoolId isActive mustChangePassword sessionVersion").lean();
+          const currentVersion = Number(current?.sessionVersion || 0);
+          const tokenVersion = Number(token.sessionVersion || 0);
+          if (!current || !current.isActive || currentVersion !== tokenVersion) {
+            token.sub = "";
+            token.mustChangePassword = false;
+            return token;
+          }
+          token.role = current.role;
+          token.schoolId = current.schoolId;
+          token.mustChangePassword = Boolean(current.mustChangePassword);
+          token.sessionVersion = currentVersion;
+          token.name = current.name;
+          token.email = current.email;
+        } catch {
+          // Fail closed when session validity cannot be checked against the current account.
+          token.sub = "";
+          token.mustChangePassword = false;
+        }
+      }
       return token;
     },
     async session({ session, token }) {
-      if (session.user) { session.user.id = token.sub ?? ""; session.user.role = token.role as import("@/models/User").UserRole; session.user.schoolId = String(token.schoolId ?? ""); }
+      if (session.user) {
+        session.user.id = token.sub ?? "";
+        session.user.role = token.role as import("@/models/User").UserRole;
+        session.user.schoolId = String(token.schoolId ?? "");
+        session.user.mustChangePassword = Boolean(token.mustChangePassword);
+      }
       return session;
     }
   }

@@ -16,8 +16,8 @@ export async function GET(request:NextRequest){
   const q=request.nextUrl.searchParams.get("q")?.trim().slice(0,80);if(q)filter.$or=[{name:{$regex:q,$options:"i"}},{email:{$regex:q,$options:"i"}}];
   const role=request.nextUrl.searchParams.get("role");if(role&&["super_admin","school_admin","editor","publisher","admissions_staff","enquiry_staff","media_manager"].includes(role))filter.role=role;
   const page=Math.max(1,Number(request.nextUrl.searchParams.get("page")||1));const limit=Math.min(50,Math.max(1,Number(request.nextUrl.searchParams.get("limit")||50)));
-  const [items,total]=await Promise.all([User.find(filter).sort({createdAt:-1}).skip((page-1)*limit).limit(limit).select("name email role schoolId isActive createdAt updatedAt").lean(),User.countDocuments(filter)]);
-  return NextResponse.json({data:items.map((u)=>({id:String(u._id),name:u.name,email:u.email,role:u.role,schoolId:u.schoolId,isActive:u.isActive,createdAt:u.createdAt,updatedAt:u.updatedAt})),pagination:{page,limit,total}});
+  const [items,total]=await Promise.all([User.find(filter).sort({createdAt:-1}).skip((page-1)*limit).limit(limit).select("name email role schoolId isActive mustChangePassword createdAt updatedAt").lean(),User.countDocuments(filter)]);
+  return NextResponse.json({data:items.map((u)=>({id:String(u._id),name:u.name,email:u.email,role:u.role,schoolId:u.schoolId,isActive:u.isActive,mustChangePassword:Boolean(u.mustChangePassword),createdAt:u.createdAt,updatedAt:u.updatedAt})),pagination:{page,limit,total}});
  }catch(error){return internalError(error);}
 }
 export async function POST(request:NextRequest){
@@ -28,7 +28,7 @@ export async function POST(request:NextRequest){
  const schoolId=isSuperAdmin?(input.schoolId||getDefaultSchoolId()):access.session.user.schoolId;
  try{
   await connectToDatabase();
-  const item=await User.create({name:input.name,email:input.email.toLowerCase(),passwordHash:await bcrypt.hash(input.password,12),role:input.role,schoolId,isActive:true});
+  const item=await User.create({name:input.name,email:input.email.toLowerCase(),passwordHash:await bcrypt.hash(input.password,12),role:input.role,schoolId,isActive:true,mustChangePassword:true,sessionVersion:0});
   await recordAudit({ schoolId, actorId: access.session.user.id, actorRole: access.session.user.role, action: "user.created", targetType: "user", targetId: String(item._id), metadata: { role: item.role } });
   return NextResponse.json({data:{id:String(item._id),name:item.name,email:item.email,role:item.role,schoolId:item.schoolId,isActive:item.isActive}},{status:201});
  }catch(error){

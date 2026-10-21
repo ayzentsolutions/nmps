@@ -22,6 +22,8 @@ export async function POST(request:NextRequest){
   const user=await User.findOne({_id:consumed.userId,schoolId:consumed.schoolId,isActive:true}).select("+passwordHash");
   if(!user)return apiError("This reset link is invalid or expired. Request a new one.",400);
   user.passwordHash=await bcrypt.hash(parsed.data.password,12);
+  user.mustChangePassword=false;
+  user.sessionVersion=Number(user.sessionVersion||0)+1;
   await user.save();
   await PasswordResetToken.deleteMany({userId:user._id});
   await recordAudit({schoolId:user.schoolId,actorId:String(user._id),actorRole:user.role,action:"user.password-reset",targetType:"user",targetId:String(user._id),metadata:{method:"email-token"}});
