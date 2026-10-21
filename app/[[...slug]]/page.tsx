@@ -11,13 +11,13 @@ export const dynamic = "force-dynamic";
 async function getPublishedPage(slug: string) {
   if (!process.env.MONGODB_URI) return null;
   await connectToDatabase();
-  return Page.findOne({ schoolId: getDefaultSchoolId(), slug, status: "published", publishedContent: { $ne: null } }).lean();
+  return Page.findOne({ schoolId: getDefaultSchoolId(), publishedSlug: slug, status: "published", publishedContent: { $ne: null } }).lean();
 }
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const resolved = await params; const slug = resolved.slug?.join("/") || "home";
   const page = await getPublishedPage(slug); const content = page?.publishedContent as PageContent | null;
   return {
-    title: content?.seo?.title || page?.title || (slug === "home" ? "School Website" : "Page not found"),
+    title: content?.seo?.title || page?.publishedTitle || (slug === "home" ? "School Website" : "Page not found"),
     description: content?.seo?.description || "Official school information, news and admissions.",
     openGraph: content?.seo?.ogImage ? { images: [content.seo.ogImage] } : undefined,
     robots: { index: slug === "home" || Boolean(page), follow: true }

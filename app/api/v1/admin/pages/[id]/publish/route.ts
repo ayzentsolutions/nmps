@@ -9,17 +9,18 @@ import { publishPage, serializePage } from "@/lib/services/pages";
 import { apiError, internalError } from "@/lib/api-response";
 type Context = { params: Promise<{ id: string }> };
 export async function POST(_request: NextRequest, context: Context) {
-  const access = await authorize("pages:publish");
-  if (access.response) return access.response;
+  const access = await authorize("pages:publish"); if (access.response) return access.response;
   if (!access.session) return apiError("Authentication required.", 401);
   try {
-    const { id } = await context.params;
-    if (!mongoose.isValidObjectId(id)) return apiError("Invalid page ID.", 400);
+    const { id } = await context.params; if (!mongoose.isValidObjectId(id)) return apiError("Invalid page ID.", 400);
     await connectToDatabase();
     const page = await Page.findOne({ _id: id, ...getSchoolFilter(access.session) });
     if (!page) return apiError("Page not found.", 404);
     const published = await publishPage(page, access.session.user.id);
     revalidatePath("/"); revalidatePath("/" + published.slug); revalidateTag("school-pages");
     return NextResponse.json({ data: serializePage(published) });
-  } catch (error) { return internalError(error); }
+  } catch (error) {
+    if (error instanceof Error && "code" in error && error.code === 11000) return apiError("That URL is already assigned to another published page.", 409);
+    return internalError(error);
+  }
 }
