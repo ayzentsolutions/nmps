@@ -8,7 +8,7 @@ import {apiError,internalError} from "@/lib/api-response";
 import {revalidatePath} from "next/cache";
 type Context={params:Promise<{id:string}>};
 export async function POST(_request:NextRequest,context:Context){
- const access=await authorize("notices:manage");if(access.response)return access.response;if(!access.session)return apiError("Authentication required.",401);
+ const access=await authorize("notices:publish");if(access.response)return access.response;if(!access.session)return apiError("Authentication required.",401);
  try{
   const {id}=await context.params;if(!mongoose.isValidObjectId(id))return apiError("Invalid notice ID.",400);
   await connectToDatabase();const item=await Notice.findOne({_id:id,...getSchoolFilter(access.session)});
