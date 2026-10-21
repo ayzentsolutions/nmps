@@ -1,0 +1,5 @@
+import {z} from "zod";
+const safeUrl=z.string().trim().max(1000).refine((v)=>v===""||(v.startsWith("/")&&!v.startsWith("//"))||/^https:\/\/\S+$/i.test(v),"Media URLs must be local paths or HTTPS.");
+export const galleryItemSchema=z.object({id:z.string().min(1).max(100),imageUrl:safeUrl,altText:z.string().trim().max(300).default(""),caption:z.string().trim().max(500).default(""),order:z.number().int().min(0).max(1000).default(0)});
+export const gallerySchema=z.object({title:z.string().trim().min(2).max(180),slug:z.string().trim().min(1).max(180).regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/),description:z.string().trim().max(4000).default(""),coverImageUrl:safeUrl.default(""),items:z.array(galleryItemSchema).max(100)}).refine((v)=>v.items.every((item)=>item.imageUrl.length>0),{path:["items"],message:"Every gallery item must include an image URL."});
+export const galleryUpdateSchema=gallerySchema.partial().refine((v)=>Object.keys(v).length>0,"Provide at least one field.");
