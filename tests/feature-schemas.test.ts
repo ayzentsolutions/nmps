@@ -6,6 +6,7 @@ import {gallerySchema} from "@/lib/validations/gallery";
 import {applicationSchema} from "@/lib/validations/admissions";
 import {publicEnquirySchema} from "@/lib/validations/enquiry";
 import {settingsSchema} from "@/lib/validations/settings";
+import {passwordResetRequestSchema,passwordResetCompleteSchema} from "@/lib/validations/password-reset";
 
 describe("page schemas",()=>{
  it("accepts a valid slug and known block types",()=>{
@@ -77,5 +78,17 @@ describe("website setting validation",()=>{
   expect(settingsSchema.safeParse(base).success).toBe(true);
   expect(settingsSchema.safeParse({...base,theme:{...base.theme,primaryColor:"red"}}).success).toBe(false);
   expect(settingsSchema.safeParse({...base,navigation:[{id:"bad",label:"Bad",href:"//evil.example",children:[]}]}).success).toBe(false);
+ });
+});
+
+
+describe("password reset validation",()=>{
+ it("accepts valid request emails and rejects malformed emails",()=>{
+  expect(passwordResetRequestSchema.safeParse({email:"staff@example.org"}).success).toBe(true);
+  expect(passwordResetRequestSchema.safeParse({email:"not-an-email"}).success).toBe(false);
+ });
+ it("requires a reset token and a 14-character minimum password",()=>{
+  expect(passwordResetCompleteSchema.safeParse({token:"a".repeat(43),password:"a-long-unique-passphrase"}).success).toBe(true);
+  expect(passwordResetCompleteSchema.safeParse({token:"short",password:"too-short"}).success).toBe(false);
  });
 });

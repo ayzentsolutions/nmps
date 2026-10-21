@@ -1,25 +1,31 @@
-# Setup and configuration
+# NMPS setup and release configuration
 
-## Requirements
-- Node.js 20.9+ (Node.js 22 LTS recommended), npm, and MongoDB Atlas.
-- An Auth.js secret and one-time bootstrap secret of at least 24 characters.
+## Stack
+NMPS is one Next.js App Router application using TypeScript, React, Tailwind CSS, Auth.js Credentials, Mongoose/MongoDB, Zod, Cloudinary and Resend. The API handlers live under /api/v1; a separate Express server is not required.
 
 ## Local setup
-1. Run npm install.
-2. Copy .env.example to .env.local.
-3. Set MONGODB_URI, AUTH_SECRET, AUTH_URL, DEFAULT_SCHOOL_ID and BOOTSTRAP_SECRET.
-4. Run npm run dev and open http://localhost:3000.
-5. Create the first administrator using POST /api/v1/admin/bootstrap, with the one-time secret in the x-bootstrap-secret header and JSON fields name, email, password. Passwords must be at least 14 characters.
-6. Sign in at /admin/login and open the page builder.
-7. Rotate or remove BOOTSTRAP_SECRET after use.
+1. Use Node.js 22 LTS and npm.
+2. Run npm install.
+3. Copy .env.example to .env.local.
+4. Set MONGODB_URI, AUTH_SECRET, AUTH_URL=http://localhost:3000, DEFAULT_SCHOOL_ID, and BOOTSTRAP_SECRET (at least 32 random characters).
+5. Configure Cloudinary credentials for the media library. To use private admissions attachments, the Cloudinary account must support authenticated raw assets.
+6. For actual email delivery, set RESEND_API_KEY, EMAIL_FROM, and the optional ADMISSIONS_NOTIFICATION_EMAIL / ENQUIRY_NOTIFICATION_EMAIL inboxes. The sender must be verified with Resend.
+7. Run npm run dev, then open http://localhost:3000.
 
-Bootstrap stays closed if the secret is not configured, is shorter than 24 characters, or is incorrect. It refuses to run after a user already exists. Do not send the bootstrap secret from frontend code or commit it to the repository.
+## First administrator
+Send POST /api/v1/admin/bootstrap with header x-bootstrap-secret: $BOOTSTRAP_SECRET and JSON { "name": "...", "email": "...", "password": "..." }. The password must be at least 14 characters. Bootstrap requires a valid secret and an empty user collection. It is one-time; rotate/remove the bootstrap secret after setup.
 
-## MongoDB
-Use a dedicated database and a least-privilege MongoDB Atlas database user. Restrict network access to required environments and back up production data before destructive changes. Configure unique indexes before moving production traffic.
+## Password recovery
+Staff use /admin/forgot-password. Reset requests return the same response for existing and unknown email addresses. Tokens are random, stored only as SHA-256 hashes, single-use and valid for 30 minutes. Email delivery requires the Resend configuration above. AUTH_URL must be the canonical HTTPS site URL in deployment.
+
+## CI checks
+Run npm run lint, npm run typecheck, npm test, and npm run build. GitHub Actions runs these on pushes to main and pull requests. The repository does not yet have a committed lockfile, so dependency installation is not fully reproducible; generate and commit package-lock.json, then switch release/CI installs to npm ci.
 
 ## Deployment
-Deploy as one Next.js application to Vercel or compatible hosting; do not deploy a separate Express or Node API server. Configure environment variables in the hosting dashboard. Use an isolated preview database rather than the production database.
+Deploy the Next.js app to Vercel or compatible Node hosting. Configure the variables above in the hosting dashboard and use separate preview/production databases. Verify /api/health and /api/ready. Perform a real sign-in, content publish/unpublish, media upload, private document upload/download, application submission, contact enquiry, email delivery and password reset against the configured deployment before launch.
 
-## Incomplete integrations
-Cloudinary uploads, email, notices, events, galleries, admissions, enquiry management, user management and version restoration UI are not complete in this batch.
+## Important cautions
+- Admissions attachments are stored as authenticated private Cloudinary assets, separate from public website media.
+- Public admissions documents allow PDF/JPEG/PNG, up to 3 files and 4 MB combined.
+- Privacy policy and terms pages are starter text and require school approval.
+- Do not use production personal data until CI, authorization, data retention, backup/restore, accessibility, security and end-to-end checks are complete.

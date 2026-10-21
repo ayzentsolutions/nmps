@@ -2,7 +2,8 @@ export type TransactionalEmailCategory =
   | "admission-confirmation"
   | "admissions-notification"
   | "enquiry-confirmation"
-  | "enquiry-notification";
+  | "enquiry-notification"
+  | "password-reset";
 
 type TransactionalEmail = {
   to: string;
