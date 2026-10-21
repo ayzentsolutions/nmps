@@ -1,6 +1,7 @@
 import {NextRequest,NextResponse} from "next/server";
 import mongoose from "mongoose";
 import AdmissionApplication from "@/models/AdmissionApplication";
+import { recordAudit } from "@/lib/audit";
 import {authorize} from "@/lib/permissions";
 import {connectToDatabase} from "@/lib/mongodb";
 import {getSchoolFilter} from "@/lib/school";
@@ -28,6 +29,7 @@ export async function PATCH(request:NextRequest,context:Context){
   if(input.status&&input.status!==app.status){app.status=input.status;app.statusHistory.push({status:input.status,changedBy:access.session.user.id,changedAt:new Date(),note:input.note||""});}
   else if(input.note&&!input.internalNote)app.statusHistory.push({status:app.status,changedBy:access.session.user.id,changedAt:new Date(),note:input.note});
   await app.save();
+  await recordAudit({ schoolId: app.schoolId, actorId: access.session.user.id, actorRole: access.session.user.role, action: "admission.updated", targetType: "admission-application", targetId: String(app._id), metadata: { status: app.status } });
   return NextResponse.json({data:{id:String(app._id),referenceNumber:app.referenceNumber,status:app.status,statusHistory:app.statusHistory,updatedAt:app.updatedAt}});
  }catch(error){return internalError(error);}
 }
