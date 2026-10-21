@@ -19,9 +19,14 @@ export async function POST(_request: NextRequest, context: Context) {
     await connectToDatabase();
     const page = await Page.findOne({ _id: id, ...getSchoolFilter(access.session) });
     if (!page) return apiError("Page not found.", 404);
+    const slugConflict = await Page.findOne({ schoolId: page.schoolId, publishedSlug: page.slug, _id: { $ne: page._id } }).select("_id");
+    if (slugConflict) return apiError("Another published page already uses this URL.", 409);
     const published = await publishPage(page, access.session.user.id);
-    revalidatePath("/"); revalidatePath("/" + published.slug); revalidateTag("school-pages");
+    revalidatePath("/"); revalidatePath("/" + (published.publishedSlug || published.slug)); revalidateTag("school-pages");
     await recordAudit({ schoolId: published.schoolId, actorId: access.session.user.id, actorRole: access.session.user.role, action: "page.published", targetType: "page", targetId: String(published._id), metadata: { slug: published.publishedSlug || published.slug, versionNumber: published.versionNumber } });
     return NextResponse.json({ data: serializePage(published) });
-  } catch (error) { return internalError(error); }
+  } catch (error) {
+    if (error && typeof error === "object" && "code" in error && error.code === 11000) return apiError("Another published page already uses this URL.", 409);
+    return internalError(error);
+  }
 }
