@@ -5,7 +5,7 @@ export const publicEnquirySchema=z.object({
  phone:z.string().trim().max(40).default(""),
  subject:z.string().trim().min(2).max(180),
  message:z.string().trim().min(10).max(8000),
- website:z.string().max(0).optional().default("")
+ website:z.string().max(1000).optional().default("")
 });
 export const enquiryUpdateSchema=z.object({
  status:z.enum(["new","contacted","follow_up","converted","closed"]).optional(),
