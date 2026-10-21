@@ -1,0 +1,23 @@
+import type { Metadata } from "next";
+import Link from "next/link";
+import { redirect } from "next/navigation";
+import { auth, signOut } from "@/lib/auth";
+import { LayoutDashboard, PanelsTopLeft, Image, Bell, CalendarDays, ArrowUpRight, LogOut, Settings } from "lucide-react";
+export const metadata:Metadata={title:"Admin dashboard",robots:{index:false,follow:false}};
+const modules=[
+ {title:"Pages & visual builder",body:"Create and compose pages with reusable content blocks.",href:"/admin/pages",icon:PanelsTopLeft,tone:"bg-teal/10 text-teal"},
+ {title:"Media library",body:"Central image and document library. Upload workflow is not yet enabled.",href:"/admin/pages",icon:Image,tone:"bg-amber-100 text-amber-800"},
+ {title:"Notices & circulars",body:"A database-backed notice workflow is planned for the next batch.",href:"/admin/pages",icon:Bell,tone:"bg-blue-100 text-blue-800"},
+ {title:"Events & galleries",body:"Event and gallery publishing will be connected in a later batch.",href:"/admin/pages",icon:CalendarDays,tone:"bg-violet-100 text-violet-800"}
+];
+export default async function Dashboard(){
+ const session=await auth(); if(!session?.user?.id) redirect("/admin/login");
+ return <div className="admin-shell">
+  <header className="border-b border-slate-200 bg-white"><div className="mx-auto flex max-w-7xl items-center justify-between px-5 py-4"><Link href="/admin/dashboard" className="flex items-center gap-3 font-bold"><span className="rounded-xl bg-ink p-2.5 text-white"><LayoutDashboard size={20}/></span><span>School CMS<span className="mt-0.5 block text-xs font-normal text-slate-500">Administration workspace</span></span></Link><div className="flex items-center gap-4"><div className="hidden text-right sm:block"><p className="text-sm font-semibold">{session.user.name||session.user.email}</p><p className="text-xs text-slate-500">{session.user.role.replaceAll("_"," ")}</p></div><form action={async()=>{"use server";await signOut({redirectTo:"/admin/login"});}}><button className="inline-flex items-center gap-2 rounded-lg border px-3 py-2 text-sm font-semibold"><LogOut size={15}/>Sign out</button></form></div></div></header>
+  <main className="mx-auto max-w-7xl px-5 py-10"><p className="eyebrow">Your workspace</p><h1 className="mt-2 text-3xl font-bold">Good to see you.</h1><p className="mt-3 max-w-2xl leading-7 text-slate-500">Manage published school information and prepare updates for review. Draft content stays private until explicitly published.</p>
+   <div className="mt-8 grid gap-4 sm:grid-cols-2 xl:grid-cols-4"><div className="content-card"><p className="text-sm text-slate-500">Workspace</p><p className="mt-2 text-2xl font-bold">Content</p><p className="mt-2 text-xs text-slate-500">MongoDB-backed page records</p></div><div className="content-card"><p className="text-sm text-slate-500">Publishing</p><p className="mt-2 text-2xl font-bold">Draft → Live</p><p className="mt-2 text-xs text-slate-500">Separate draft and public snapshots</p></div><div className="content-card"><p className="text-sm text-slate-500">Access</p><p className="mt-2 text-2xl font-bold">Role-based</p><p className="mt-2 text-xs text-slate-500">Server-enforced permissions</p></div><div className="content-card"><p className="text-sm text-slate-500">School scope</p><p className="mt-2 break-words text-lg font-bold">{session.user.schoolId}</p><p className="mt-2 text-xs text-slate-500">Scoped data access</p></div></div>
+   <h2 className="mt-10 text-lg font-bold">Content and communication</h2><div className="mt-4 grid gap-4 md:grid-cols-2 xl:grid-cols-4">{modules.map((module)=>{const Icon=module.icon;return <Link key={module.title} href={module.href} className="content-card group transition hover:-translate-y-0.5 hover:shadow-soft"><span className={"inline-flex rounded-xl p-3 "+module.tone}><Icon size={20}/></span><h3 className="mt-5 flex items-center justify-between font-bold">{module.title}<ArrowUpRight size={16} className="text-slate-400 group-hover:text-teal"/></h3><p className="mt-2 text-sm leading-6 text-slate-500">{module.body}</p></Link>;})}</div>
+   <div className="mt-7 rounded-2xl border border-teal/20 bg-teal/5 p-5"><div className="flex items-start gap-3"><Settings className="mt-1 text-teal" size={20}/><div><h3 className="font-bold">Implementation status</h3><p className="mt-1 text-sm leading-6 text-slate-600">The first working slice includes sign-in, database-backed pages, version snapshots, draft isolation, and page publishing. Media, notices, admissions, and enquiries are not yet available; see docs/implementation-status.md.</p></div></div></div>
+  </main>
+ </div>;
+}
