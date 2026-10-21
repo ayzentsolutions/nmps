@@ -1,5 +1,6 @@
+import type { FilterQuery } from "mongoose";
 import {NextRequest,NextResponse} from "next/server";
-import Enquiry from "@/models/Enquiry";
+import Enquiry, { type EnquiryDocument } from "@/models/Enquiry";
 import {authorize} from "@/lib/permissions";
 import {connectToDatabase} from "@/lib/mongodb";
 import {getSchoolFilter} from "@/lib/school";
@@ -8,7 +9,7 @@ export const dynamic="force-dynamic";
 export async function GET(request:NextRequest){
  const access=await authorize("enquiries:manage");if(access.response)return access.response;if(!access.session)return apiError("Authentication required.",401);
  try{
-  await connectToDatabase();const filter:Record<string,unknown>={...getSchoolFilter(access.session)};
+  await connectToDatabase();const filter:FilterQuery<EnquiryDocument>={...getSchoolFilter(access.session)};
   const status=request.nextUrl.searchParams.get("status");if(status&&["new","contacted","follow_up","converted","closed"].includes(status))filter.status=status;
   const q=request.nextUrl.searchParams.get("q")?.trim().slice(0,80);if(q)filter.$or=[{referenceNumber:{$regex:q,$options:"i"}},{name:{$regex:q,$options:"i"}},{email:{$regex:q,$options:"i"}},{subject:{$regex:q,$options:"i"}}];
   const page=Math.max(1,Number(request.nextUrl.searchParams.get("page")||1));const limit=Math.min(50,Math.max(1,Number(request.nextUrl.searchParams.get("limit")||20)));
