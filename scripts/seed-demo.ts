@@ -39,6 +39,29 @@ async function main(){
   const version=await PageVersion.create({schoolId,pageId:page._id,versionNumber:1,title:item.title,slug:item.slug,content:item.content,status:"published",createdBy:"demo-seed"});
   page.currentVersionId=version._id;page.publishedVersionId=version._id;await page.save();
  }
+
+ const starterDrafts=[
+  ["Principal’s Message","principals-message"],
+  ["Vision and Mission","vision-and-mission"],
+  ["Infrastructure and Facilities","infrastructure-and-facilities"],
+  ["Academics","academics"],
+  ["Curriculum","curriculum"],
+  ["Faculty and Staff","faculty-and-staff"],
+  ["Admission Process","admission-process"],
+  ["Fee Information","fee-information"],
+  ["Achievements","achievements"],
+  ["Student Activities","student-activities"],
+  ["Video Gallery","video-gallery"],
+  ["Mandatory Disclosures","mandatory-disclosures"],
+  ["Privacy Policy","privacy-policy"],
+  ["Terms and Conditions","terms-and-conditions"]
+ ] as const;
+ for(const [title,slug] of starterDrafts){
+  const content=pageContentSchema.parse({blocks:[{id:"starter-"+slug,type:"richText",visible:true,title,body:"This is an unpublished starter draft. Replace this text with approved school information in the CMS, review it, and publish when ready."}],seo:{title:title+" | Example School",description:"Add the approved "+title.toLowerCase()+" content for your school.",ogImage:""}});
+  const page=await Page.create({schoolId,title,slug,status:"draft",draftContent:content,publishedContent:null,publishedTitle:null,publishedSlug:null,publishedAt:null,versionNumber:1,createdBy:"demo-seed",updatedBy:"demo-seed"});
+  const version=await PageVersion.create({schoolId,pageId:page._id,versionNumber:1,title,slug,content,status:"draft",createdBy:"demo-seed"});
+  page.currentVersionId=version._id;await page.save();
+ }
  await SiteSettings.create({...DEFAULT_SITE_SETTINGS,schoolId,schoolName:"Example School — Replace This",tagline:"Learn · Grow · Lead"});
  console.info("Demo data seeded for " + schoolId + ". Replace example text, assets and contact information before public use.");
 }
