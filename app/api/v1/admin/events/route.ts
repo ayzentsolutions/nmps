@@ -1,6 +1,7 @@
 import type {FilterQuery} from "mongoose";
 import {NextRequest,NextResponse} from "next/server";
 import SchoolEvent,{type SchoolEventDocument} from "@/models/SchoolEvent";
+import { recordAudit } from "@/lib/audit";
 import {authorize} from "@/lib/permissions";
 import {connectToDatabase} from "@/lib/mongodb";
 import {getSchoolFilter,getSchoolIdForSession} from "@/lib/school";
@@ -24,6 +25,7 @@ export async function POST(request:NextRequest){
  try{
   await connectToDatabase();const input=parsed.data;
   const event=await SchoolEvent.create({...input,startAt:new Date(input.startAt),endAt:input.endAt?new Date(input.endAt):null,status:"draft",schoolId:getSchoolIdForSession(access.session),createdBy:access.session.user.id,updatedBy:access.session.user.id});
+  await recordAudit({ schoolId: event.schoolId, actorId: access.session.user.id, actorRole: access.session.user.role, action: "event.created", targetType: "event", targetId: String(event._id), metadata: { slug: event.slug } });
   return NextResponse.json({data:{id:String(event._id),title:event.title,slug:event.slug,status:event.status}},{status:201});
  }catch(error){if(error&&typeof error==="object"&&"code"in error&&error.code===11000)return apiError("An event with this draft URL already exists.",409);return internalError(error);}
 }
