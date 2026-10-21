@@ -68,3 +68,8 @@ export function createPrivateDocumentDownloadUrl(publicId: string, format: strin
     expires_at: Math.floor(Date.now() / 1000) + ttlSeconds
   });
 }
+
+export async function deletePrivateDocumentAsset(publicId: string) {
+  const client = configureCloudinary();
+  return client.uploader.destroy(publicId, { resource_type: "raw", type: "authenticated", invalidate: true });
+}
