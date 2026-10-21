@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { auth, signOut } from "@/lib/auth";
-import { LayoutDashboard, PanelsTopLeft, Image, Bell, CalendarDays, ArrowUpRight, LogOut, Settings, ClipboardList, MessageSquare, Users } from "lucide-react";
+import { LayoutDashboard, PanelsTopLeft, Image, Bell, CalendarDays, ArrowUpRight, LogOut, Settings, ClipboardList, MessageSquare, Users, History } from "lucide-react";
 export const metadata:Metadata={title:"Admin dashboard",robots:{index:false,follow:false}};
 const modules=[
  {title:"Pages & visual builder",body:"Create and compose pages with reusable content blocks.",href:"/admin/pages",icon:PanelsTopLeft,tone:"bg-teal/10 text-teal"},
@@ -13,7 +13,8 @@ const modules=[
  {title:"Admissions",body:"Review applications, update status and record staff-only notes.",href:"/admin/admissions",icon:ClipboardList,tone:"bg-orange-100 text-orange-800"},
  {title:"Enquiries CRM",body:"Assign enquiries, track their lifecycle and schedule follow-ups.",href:"/admin/enquiries",icon:MessageSquare,tone:"bg-cyan-100 text-cyan-800"},
  {title:"Website settings",body:"Update the school identity, theme tokens, navigation, contact and footer.",href:"/admin/settings",icon:Settings,tone:"bg-slate-100 text-slate-800"},
- {title:"Staff accounts",body:"Create staff accounts, assign roles and disable access when needed.",href:"/admin/users",icon:Users,tone:"bg-rose-100 text-rose-800"}
+ {title:"Staff accounts",body:"Create staff accounts, assign roles and disable access when needed.",href:"/admin/users",icon:Users,tone:"bg-rose-100 text-rose-800"},
+ {title:"Audit log",body:"Review recent administrator actions, actors and targets.",href:"/admin/audit-logs",icon:History,tone:"bg-indigo-100 text-indigo-800"}
 ];
 export default async function Dashboard(){
  const session=await auth(); if(!session?.user?.id) redirect("/admin/login");
