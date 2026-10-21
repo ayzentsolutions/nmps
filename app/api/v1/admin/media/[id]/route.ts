@@ -4,6 +4,8 @@ import MediaAsset from "@/models/MediaAsset";
 import Page from "@/models/Page";
 import SiteSettings from "@/models/SiteSettings";
 import Notice from "@/models/Notice";
+import SchoolEvent from "@/models/SchoolEvent";
+import GalleryAlbum from "@/models/GalleryAlbum";
 import {authorize} from "@/lib/permissions";
 import {connectToDatabase} from "@/lib/mongodb";
 import {getSchoolFilter} from "@/lib/school";
@@ -28,12 +30,14 @@ export async function DELETE(_request:NextRequest,context:Context){
   const {id}=await context.params;if(!mongoose.isValidObjectId(id))return apiError("Invalid media ID.",400);
   await connectToDatabase();const asset=await MediaAsset.findOne({_id:id,...getSchoolFilter(access.session)});if(!asset)return apiError("Asset not found.",404);
   const url=asset.secureUrl;const schoolId=asset.schoolId;
-  const [pageRef,settingsRef,noticeRef]=await Promise.all([
+  const [pageRef,settingsRef,noticeRef,eventRef,galleryRef]=await Promise.all([
    Page.exists({schoolId,$or:[{"draftContent.blocks.imageUrl":url},{"draftContent.seo.ogImage":url},{"publishedContent.blocks.imageUrl":url},{"publishedContent.seo.ogImage":url}]}),
    SiteSettings.exists({schoolId,$or:[{logoUrl:url},{faviconUrl:url},{"seo.ogImage":url}]}),
-   Notice.exists({schoolId,$or:[{attachmentUrl:url},{publishedAttachmentUrl:url}]})
+   Notice.exists({schoolId,$or:[{attachmentUrl:url},{publishedAttachmentUrl:url}]}),
+   SchoolEvent.exists({schoolId,$or:[{imageUrl:url},{publishedImageUrl:url}]}),
+   GalleryAlbum.exists({schoolId,$or:[{coverImageUrl:url},{publishedCoverImageUrl:url},{"items.imageUrl":url},{"publishedItems.imageUrl":url}]})
   ]);
-  if(pageRef||settingsRef||noticeRef)return apiError("This asset is still referenced by published or draft content. Remove those references before deleting it.",409);
+  if(pageRef||settingsRef||noticeRef||eventRef||galleryRef)return apiError("This asset is still referenced by pages, settings, notices, events or gallery albums. Remove those references before deleting it.",409);
   await deleteCloudinaryAsset(asset.publicId,asset.resourceType);await asset.deleteOne();
   return new NextResponse(null,{status:204});
  }catch(error){return internalError(error);}
