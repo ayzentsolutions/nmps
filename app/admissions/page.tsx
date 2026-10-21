@@ -2,6 +2,7 @@
 import Link from "next/link";
 import {useState,type FormEvent} from "react";
 import {ArrowLeft,CheckCircle2,GraduationCap,ShieldCheck} from "lucide-react";
+import {PublicSiteHeader,PublicSiteFooter} from "@/components/public-site/public-site-chrome";
 const initial={admissionSession:"2027-2028",studentName:"",dateOfBirth:"",gradeApplied:"",parentName:"",parentEmail:"",parentPhone:"",address:""};
 export default function AdmissionsPage(){
  const [form,setForm]=useState(initial);const [busy,setBusy]=useState(false);const [error,setError]=useState("");const [reference,setReference]=useState("");
@@ -13,7 +14,7 @@ export default function AdmissionsPage(){
    setReference(body.data.referenceNumber);setForm(initial);
   }catch(e){setError(e instanceof Error?e.message:"Application submission failed.");}finally{setBusy(false);}
  }
- return <main className="min-h-screen bg-paper"><header className="border-b border-slate-200 bg-white"><div className="container-site flex min-h-[76px] items-center justify-between"><Link href="/" className="font-bold">School Website</Link><Link href="/" className="inline-flex items-center gap-2 text-sm font-semibold text-teal"><ArrowLeft size={15}/>Back home</Link></div></header>
+ return <main className="min-h-screen bg-paper"><PublicSiteHeader />
   <section className="bg-ink py-16 text-white"><div className="container-site"><p className="eyebrow !text-gold">Begin your journey</p><h1 className="mt-3 text-4xl font-bold md:text-5xl">Admissions enquiry & application</h1><p className="mt-4 max-w-2xl leading-7 text-slate-200">Share your details with the admissions team. Required documents and email notifications can be configured in later release work; do not send confidential documents in this form.</p><div className="mt-6 flex flex-wrap gap-5 text-sm text-slate-300"><span className="inline-flex items-center gap-2"><GraduationCap size={17}/>Student-first learning</span><span className="inline-flex items-center gap-2"><ShieldCheck size={17}/>Private staff workflow</span></div></div></section>
   <section className="container-site grid gap-8 py-12 lg:grid-cols-[.8fr_1.2fr]"><div><p className="eyebrow">How it works</p><h2 className="mt-3 text-2xl font-bold">A clear first step for families.</h2><p className="mt-4 leading-7 text-slate-600">Complete the form with accurate information. On submission, the system will issue a reference number for follow-up. Admissions staff can review the application and update its status from the protected workspace.</p><div className="mt-6 rounded-2xl border border-slate-200 bg-white p-5"><h3 className="font-bold">Before submitting</h3><p className="mt-2 text-sm leading-6 text-slate-600">Please double-check the parent email and phone number. This initial version does not request uploaded documents or send automatic confirmation emails.</p></div></div>
    <div className="content-card"><h2 className="text-xl font-bold">Application form</h2>{reference?<div className="mt-5 rounded-2xl bg-emerald-50 p-5 text-emerald-900"><CheckCircle2 size={28}/><h3 className="mt-3 text-lg font-bold">Application received</h3><p className="mt-2 text-sm">Your reference number is:</p><p className="mt-1 break-all text-2xl font-black">{reference}</p><p className="mt-3 text-sm">Save this reference for any follow-up with the school.</p><button onClick={()=>setReference("")} className="mt-4 rounded-lg border border-emerald-300 px-4 py-2 text-sm font-bold">Submit another application</button></div>:<form onSubmit={submit} className="mt-5 space-y-4">
@@ -25,6 +26,6 @@ export default function AdmissionsPage(){
     <label className="block text-sm font-semibold">Address<textarea rows={3} maxLength={800} className="form-field mt-1.5 font-normal" value={form.address} onChange={(e)=>setForm({...form,address:e.target.value})}/></label>
     <button disabled={busy} className="w-full rounded-xl bg-teal px-5 py-3 font-bold text-white disabled:opacity-50">{busy?"Submitting securely…":"Submit application"}</button><p className="text-xs leading-5 text-slate-500">Your details are sent to the school’s admissions system. Only authorized staff can access application records.</p>
    </form>}</div>
-  </section><footer className="bg-ink py-8 text-white"><div className="container-site flex justify-between gap-4"><span className="font-bold">School Website</span><Link href="/privacy-policy" className="text-sm text-slate-300">Privacy policy</Link></div></footer>
+  </section><PublicSiteFooter />
  </main>;
 }
