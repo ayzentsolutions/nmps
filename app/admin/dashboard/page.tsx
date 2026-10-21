@@ -8,7 +8,8 @@ const modules=[
  {title:"Pages & visual builder",body:"Create and compose pages with reusable content blocks.",href:"/admin/pages",icon:PanelsTopLeft,tone:"bg-teal/10 text-teal"},
  {title:"Media library",body:"Central image and document library. Upload workflow is not yet enabled.",href:"/admin/pages",icon:Image,tone:"bg-amber-100 text-amber-800"},
  {title:"Notices & circulars",body:"A database-backed notice workflow is planned for the next batch.",href:"/admin/pages",icon:Bell,tone:"bg-blue-100 text-blue-800"},
- {title:"Events & galleries",body:"Event and gallery publishing will be connected in a later batch.",href:"/admin/pages",icon:CalendarDays,tone:"bg-violet-100 text-violet-800"}
+ {title:"Events & galleries",body:"Event and gallery publishing will be connected in a later batch.",href:"/admin/pages",icon:CalendarDays,tone:"bg-violet-100 text-violet-800"},
+ {title:"Website settings",body:"Update the school identity, theme tokens, navigation, contact and footer.",href:"/admin/settings",icon:Settings,tone:"bg-slate-100 text-slate-800"}
 ];
 export default async function Dashboard(){
  const session=await auth(); if(!session?.user?.id) redirect("/admin/login");
