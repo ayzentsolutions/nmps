@@ -10,7 +10,7 @@ export const DEFAULT_SITE_SETTINGS = {
   faviconUrl:"",
   theme:{primaryColor:"#10233f",accentColor:"#1d837c",highlightColor:"#d9b36c",bodyFont:"Arial" as const,containerWidth:"standard" as const,sectionSpacing:"comfortable" as const},
   navigation:[
-    {id:"about",label:"About",href:"/about",children:[]},
+    {id:"about",label:"About",href:"/about-the-school",children:[]},
     {id:"academics",label:"Academics",href:"/academics",children:[]},
     {id:"admissions",label:"Admissions",href:"/admissions",children:[]},
     {id:"notices",label:"Notices",href:"/notices",children:[]},
