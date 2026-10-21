@@ -1,6 +1,7 @@
 import {NextRequest,NextResponse} from "next/server";
 import mongoose from "mongoose";
 import GalleryAlbum from "@/models/GalleryAlbum";
+import { recordAudit } from "@/lib/audit";
 import {authorize} from "@/lib/permissions";
 import {connectToDatabase} from "@/lib/mongodb";
 import {getSchoolFilter} from "@/lib/school";
@@ -13,6 +14,8 @@ export async function POST(_request:NextRequest,context:Context){
   const {id}=await context.params;if(!mongoose.isValidObjectId(id))return apiError("Invalid gallery ID.",400);await connectToDatabase();
   const album=await GalleryAlbum.findOne({_id:id,...getSchoolFilter(access.session)});if(!album)return apiError("Album not found.",404);
   album.status="draft";album.publishedTitle=null;album.publishedSlug=null;album.publishedDescription=null;album.publishedCoverImageUrl=null;album.publishedItems=null;album.publishedAt=null;album.updatedBy=access.session.user.id;
-  await album.save();revalidatePath("/gallery");revalidatePath("/");return NextResponse.json({data:{id:String(album._id),status:album.status}});
+  await album.save();
+  await recordAudit({ schoolId: album.schoolId, actorId: access.session.user.id, actorRole: access.session.user.role, action: "gallery.unpublished", targetType: "gallery-album", targetId: String(album._id), metadata: { slug: album.slug } });
+  revalidatePath("/gallery");revalidatePath("/");return NextResponse.json({data:{id:String(album._id),status:album.status}});
  }catch(error){return internalError(error);}
 }
