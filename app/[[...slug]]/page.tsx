@@ -7,6 +7,7 @@ import { getDefaultSchoolId } from "@/lib/school";
 import type { PageBlock, PageContent } from "@/lib/validations/page";
 
 type Props = { params: Promise<{ slug?: string[] }> };
+export const dynamic = "force-dynamic";
 async function getPublishedPage(slug: string) {
   if (!process.env.MONGODB_URI) return null;
   await connectToDatabase();
