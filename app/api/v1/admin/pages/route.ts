@@ -15,7 +15,7 @@ export async function GET(request: NextRequest) {
   try {
     await connectToDatabase();
     const q = request.nextUrl.searchParams.get("q")?.trim().slice(0, 80);
-    const filter: import("mongoose").FilterQuery<import("@/models/Page").PageDocument> = { ...getSchoolFilter(access.session) };
+    const filter: Record<string, unknown> = { ...getSchoolFilter(access.session) };
     const status = request.nextUrl.searchParams.get("status");
     if (status && ["draft","published","archived"].includes(status)) filter.status = status;
     if (q) filter.$or = [{ title: { $regex: q, $options: "i" } }, { slug: { $regex: q, $options: "i" } }];

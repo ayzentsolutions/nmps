@@ -1,11 +1,12 @@
 "use client";
 import { useEffect, useRef, useState, type FormEvent } from "react";
-import { ArrowDown, ArrowUp, Copy, Eye, EyeOff, FilePlus2, GripVertical, Monitor, Smartphone, Tablet, Plus, Redo2, Save, Send, Trash2, Undo2 } from "lucide-react";
+import { ArrowDown, ArrowUp, Copy, Eye, EyeOff, FilePlus2, GripVertical, Monitor, Smartphone, Tablet, Plus, Redo2, Save, Send, Trash2, Undo2, History } from "lucide-react";
 import type { UserRole } from "@/models/User";
 
 type Block = { id: string; type: string; visible: boolean; [key: string]: unknown };
 type Content = { blocks: Block[]; seo: { title: string; description: string; ogImage: string } };
 type PageItem = { id: string; title: string; slug: string; status: "draft" | "published" | "archived"; draftContent: Content; versionNumber: number; updatedAt: string };
+type VersionItem = { id: string; versionNumber: number; title: string; slug: string; status: "draft" | "published"; createdAt: string; createdBy: string };
 const emptyContent: Content = { blocks: [], seo: { title: "", description: "", ogImage: "" } };
 const blockId = () => globalThis.crypto?.randomUUID?.() || String(Date.now()) + Math.random().toString(36).slice(2);
 function makeBlock(type: string): Block {
@@ -39,6 +40,8 @@ export default function PageBuilder({ role }: { role: UserRole }) {
   const [content,setContent] = useState<Content>(emptyContent);
   const [history,setHistory] = useState<Content[]>([]);
   const [future,setFuture] = useState<Content[]>([]);
+  const [versions,setVersions] = useState<VersionItem[]>([]);
+  const [showVersions,setShowVersions] = useState(false);
   const [newTitle,setNewTitle] = useState("");
   const [newSlug,setNewSlug] = useState("");
   const [busy,setBusy] = useState(false);
@@ -50,13 +53,20 @@ export default function PageBuilder({ role }: { role: UserRole }) {
 
   function selectPage(page: PageItem) {
     setSelected(page.id); setTitle(page.title); setSlug(page.slug); setContent(normalize(page.draftContent));
-    setHistory([]); setFuture([]); setMessage(""); setError("");
+    setHistory([]); setFuture([]); setMessage(""); setError(""); setShowVersions(false);
   }
   async function loadPages() {
     const response = await fetch("/api/v1/admin/pages?limit=50",{cache:"no-store"});
     const result = await response.json();
     if (!response.ok) throw new Error(result.error || "Could not load pages.");
     const items = result.data as PageItem[]; setPages(items); return items;
+  }
+  async function loadVersions() {
+    if (!selected) return;
+    const response = await fetch("/api/v1/admin/pages/" + selected + "/versions", { cache: "no-store" });
+    const result = await response.json();
+    if (!response.ok) throw new Error(result.error || "Could not load version history.");
+    setVersions(result.data as VersionItem[]);
   }
   useEffect(() => { loadPages().then((items)=>{if(items[0]) selectPage(items[0]);}).catch((e:unknown)=>setError(e instanceof Error?e.message:"Could not load pages.")); }, []);
   function changeContent(next: Content) { setHistory((items)=>[...items,content].slice(-30)); setFuture([]); setContent(next); }
@@ -117,6 +127,17 @@ export default function PageBuilder({ role }: { role: UserRole }) {
     }catch(e){setError(e instanceof Error?e.message:"Could not delete page.");}
     finally{setBusy(false);}
   }
+  async function restoreVersion(versionId:string) {
+    if (!selected || !canEdit || !window.confirm("Restore this snapshot as a new draft? The live page remains unchanged until republished.")) return;
+    setBusy(true); setError(""); setMessage("");
+    try {
+      const response=await fetch("/api/v1/admin/pages/"+selected+"/versions/"+versionId+"/restore",{method:"POST"});
+      const result=await response.json(); if(!response.ok) throw new Error(result.error||"Could not restore version.");
+      const items=await loadPages(); const updated=items.find((item)=>item.id===selected); if(updated) selectPage(updated);
+      setShowVersions(true); await loadVersions(); setMessage("Version restored into a new draft revision. The live page was not changed.");
+    } catch(e) { setError(e instanceof Error?e.message:"Could not restore version."); }
+    finally { setBusy(false); }
+  }
   const current=pages.find((page)=>page.id===selected);
   return <div className="space-y-5">
     <div className="flex flex-wrap items-center justify-between gap-3"><div><p className="text-sm text-slate-500">Content management</p><h1 className="text-2xl font-bold text-ink">Visual page builder</h1></div><span className="rounded-full bg-white px-3 py-2 text-xs font-semibold text-slate-600">Role: {role.replaceAll("_"," ")}</span></div>
@@ -134,6 +155,7 @@ export default function PageBuilder({ role }: { role: UserRole }) {
             <button title="Undo" aria-label="Undo" disabled={!history.length||!canEdit} onClick={()=>{const previous=history[history.length-1];setHistory(history.slice(0,-1));setFuture([content,...future]);setContent(previous);}} className="rounded-lg border p-2 disabled:opacity-30"><Undo2 size={16}/></button>
             <button title="Redo" aria-label="Redo" disabled={!future.length||!canEdit} onClick={()=>{const next=future[0];setFuture(future.slice(1));setHistory([...history,content]);setContent(next);}} className="rounded-lg border p-2 disabled:opacity-30"><Redo2 size={16}/></button>
             <button onClick={()=>setPreview(!preview)} className="rounded-lg border px-3 py-2 text-sm font-semibold">{preview?"Edit blocks":"Preview"}</button>
+            <button onClick={async()=>{const next=!showVersions;setShowVersions(next);if(next)try{await loadVersions();}catch(e){setError(e instanceof Error?e.message:"Could not load version history.");}}} className="inline-flex items-center gap-2 rounded-lg border px-3 py-2 text-sm font-semibold"><History size={15}/>Versions</button>
             {canEdit?<button onClick={save} disabled={busy} className="inline-flex items-center gap-2 rounded-lg bg-ink px-3 py-2 text-sm font-semibold text-white"><Save size={15}/>Save draft</button>:null}
             {canDelete&&current.status!=="published"?<button onClick={deletePage} disabled={busy} className="rounded-lg border border-red-200 px-3 py-2 text-sm font-semibold text-red-600">Delete</button>:null}
             {canPublish&&current.status==="published"?<button onClick={()=>publish(true)} disabled={busy} className="rounded-lg border border-amber-300 px-3 py-2 text-sm font-semibold text-amber-800">Unpublish</button>:null}
@@ -143,6 +165,7 @@ export default function PageBuilder({ role }: { role: UserRole }) {
           <div className="grid gap-3 md:grid-cols-2"><label className="text-sm font-semibold">SEO title<input className="form-field mt-1.5 font-normal" maxLength={70} value={content.seo.title} onChange={(e)=>changeContent({...content,seo:{...content.seo,title:e.target.value}})} disabled={!canEdit}/></label><label className="text-sm font-semibold">SEO description<input className="form-field mt-1.5 font-normal" maxLength={180} value={content.seo.description} onChange={(e)=>changeContent({...content,seo:{...content.seo,description:e.target.value}})} disabled={!canEdit}/></label></div>
           <p className="text-xs text-slate-500">Revision {current.versionNumber}. Draft updates remain private until a version is published.</p>
         </div>
+        {showVersions?<div className="content-card space-y-3 !p-5"><div><h3 className="font-bold">Version history</h3><p className="mt-1 text-sm text-slate-500">Restoring creates a new draft and does not automatically change the public version.</p></div>{versions.map((version)=><div key={version.id} className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-slate-200 p-3"><div><p className="font-semibold">Revision {version.versionNumber} · {version.title}</p><p className="mt-1 text-xs text-slate-500">/{version.slug} · {version.status} · {new Date(version.createdAt).toLocaleString()}</p></div><button disabled={!canEdit||busy} onClick={()=>restoreVersion(version.id)} className="rounded-lg border px-3 py-2 text-sm font-semibold disabled:opacity-40">Restore as draft</button></div>)}{!versions.length?<p className="text-sm text-slate-500">No versions found.</p>:null}</div>:null}
         {!preview?<div className="grid gap-5 lg:grid-cols-[210px_minmax(0,1fr)]">
           <aside className="content-card h-fit !p-4"><h3 className="mb-3 text-sm font-bold">Block library</h3>{(["hero","richText","cta"] as const).map((type)=><button key={type} disabled={!canEdit} onClick={()=>changeContent({...content,blocks:[...content.blocks,makeBlock(type)]})} className="mb-2 flex w-full items-center justify-between rounded-lg border border-slate-200 px-3 py-2 text-sm font-semibold hover:border-teal disabled:opacity-40"><span>{type==="richText"?"Text section":type==="hero"?"Hero banner":"Call to action"}</span><Plus size={15}/></button>)}<p className="mt-3 text-xs leading-5 text-slate-500">Content is validated against an allowlisted block registry. Arbitrary HTML and scripts are never executed.</p></aside>
           <div className="min-w-0 space-y-3">

@@ -23,15 +23,13 @@ export async function publishPage(page: HydratedDocument<PageDocument>, actorId:
   page.versionNumber += 1;
   const version = await PageVersion.create({ schoolId: page.schoolId, pageId: page._id, versionNumber: page.versionNumber, title: page.title, slug: page.slug, content: page.draftContent, status: "published", createdBy: actorId });
   page.publishedContent = JSON.parse(JSON.stringify(page.draftContent)) as Record<string, unknown>;
-  page.publishedTitle = page.title; page.publishedSlug = page.slug;
   page.publishedVersionId = version._id; page.status = "published"; page.publishedAt = new Date(); page.updatedBy = actorId;
   await page.save(); return page;
 }
 export async function unpublishPage(page: HydratedDocument<PageDocument>, actorId: string) {
-  page.status = "draft"; page.publishedContent = null; page.publishedTitle = null; page.publishedSlug = null;
-  page.publishedVersionId = null; page.publishedAt = null; page.updatedBy = actorId;
+  page.status = "draft"; page.publishedContent = null; page.publishedVersionId = null; page.publishedAt = null; page.updatedBy = actorId;
   await page.save(); return page;
 }
-export function serializePage(page: { _id: unknown; schoolId: string; title: string; slug: string; status: string; publishedTitle?: string | null; publishedSlug?: string | null; draftContent: unknown; publishedContent: unknown; versionNumber: number; publishedAt: Date | null; createdAt: Date; updatedAt: Date }) {
-  return { id: String(page._id), schoolId: page.schoolId, title: page.title, slug: page.slug, status: page.status, publishedTitle: page.publishedTitle ?? null, publishedSlug: page.publishedSlug ?? null, draftContent: page.draftContent, publishedContent: page.publishedContent, versionNumber: page.versionNumber, publishedAt: page.publishedAt, createdAt: page.createdAt, updatedAt: page.updatedAt };
+export function serializePage(page: any) {
+  return { id: String(page._id), schoolId: page.schoolId, title: page.title, slug: page.slug, status: page.status, draftContent: page.draftContent, publishedContent: page.publishedContent, versionNumber: page.versionNumber, publishedAt: page.publishedAt, createdAt: page.createdAt, updatedAt: page.updatedAt };
 }

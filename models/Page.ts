@@ -1,7 +1,6 @@
 import mongoose, { Schema, type Model } from "mongoose";
 export interface PageDocument {
   schoolId: string; title: string; slug: string; status: "draft" | "published" | "archived";
-  publishedTitle: string | null; publishedSlug: string | null;
   draftContent: Record<string, unknown>; publishedContent: Record<string, unknown> | null;
   currentVersionId: mongoose.Types.ObjectId | null; publishedVersionId: mongoose.Types.ObjectId | null;
   versionNumber: number; createdBy: string; updatedBy: string; publishedAt: Date | null; createdAt: Date; updatedAt: Date;
@@ -11,8 +10,6 @@ const schema = new Schema<PageDocument>({
   title: { type: String, required: true, trim: true, maxlength: 160 },
   slug: { type: String, required: true, trim: true, lowercase: true, maxlength: 180 },
   status: { type: String, enum: ["draft","published","archived"], default: "draft", index: true },
-  publishedTitle: { type: String, default: null, trim: true, maxlength: 160 },
-  publishedSlug: { type: String, default: null, trim: true, lowercase: true, maxlength: 180 },
   draftContent: { type: Schema.Types.Mixed, default: () => ({ blocks: [], seo: { title: "", description: "", ogImage: "" } }) },
   publishedContent: { type: Schema.Types.Mixed, default: null },
   currentVersionId: { type: Schema.Types.ObjectId, ref: "PageVersion", default: null },
@@ -22,7 +19,6 @@ const schema = new Schema<PageDocument>({
   publishedAt: { type: Date, default: null }
 }, { timestamps: true, minimize: false });
 schema.index({ schoolId: 1, slug: 1 }, { unique: true });
-schema.index({ schoolId: 1, publishedSlug: 1 }, { unique: true, partialFilterExpression: { publishedSlug: { $type: "string" } } });
 schema.index({ schoolId: 1, status: 1, updatedAt: -1 });
 schema.index({ schoolId: 1, publishedAt: -1 });
 const Page = (mongoose.models.Page as Model<PageDocument>) || mongoose.model<PageDocument>("Page", schema);
