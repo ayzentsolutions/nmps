@@ -6,6 +6,7 @@ import { createPageSchema, pageContentSchema } from "@/lib/validations/page";
 import { getSchoolFilter, getSchoolIdForSession } from "@/lib/school";
 import { apiError, internalError, validationError } from "@/lib/api-response";
 import Page from "@/models/Page";
+import { recordAudit } from "@/lib/audit";
 export const dynamic = "force-dynamic";
 
 export async function GET(request: NextRequest) {
@@ -42,6 +43,7 @@ export async function POST(request: NextRequest) {
       schoolId: getSchoolIdForSession(access.session, parsed.data.schoolId),
       title: parsed.data.title, slug: parsed.data.slug, draftContent, actorId: access.session.user.id
     });
+    await recordAudit({ schoolId: page.schoolId, actorId: access.session.user.id, actorRole: access.session.user.role, action: "page.created", targetType: "page", targetId: String(page._id), metadata: { slug: page.slug } });
     return NextResponse.json({ data: serializePage(page) }, { status: 201 });
   } catch (error) {
     if (error instanceof Error && "code" in error && error.code === 11000) return apiError("A page with this slug already exists for this school.", 409);
