@@ -1,6 +1,7 @@
 import type {FilterQuery} from "mongoose";
 import {NextRequest,NextResponse} from "next/server";
 import GalleryAlbum,{type GalleryAlbumDocument} from "@/models/GalleryAlbum";
+import { recordAudit } from "@/lib/audit";
 import {authorize} from "@/lib/permissions";
 import {connectToDatabase} from "@/lib/mongodb";
 import {getSchoolFilter,getSchoolIdForSession} from "@/lib/school";
@@ -24,6 +25,7 @@ export async function POST(request:NextRequest){
  try{
   await connectToDatabase();const input=parsed.data;
   const album=await GalleryAlbum.create({...input,status:"draft",schoolId:getSchoolIdForSession(access.session),createdBy:access.session.user.id,updatedBy:access.session.user.id});
+  await recordAudit({ schoolId: album.schoolId, actorId: access.session.user.id, actorRole: access.session.user.role, action: "gallery.created", targetType: "gallery-album", targetId: String(album._id), metadata: { slug: album.slug, photoCount: album.items.length } });
   return NextResponse.json({data:{id:String(album._id),title:album.title,slug:album.slug,status:album.status}},{status:201});
  }catch(error){if(error&&typeof error==="object"&&"code"in error&&error.code===11000)return apiError("A gallery album with this URL already exists.",409);return internalError(error);}
 }
