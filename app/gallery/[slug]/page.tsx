@@ -1,10 +1,10 @@
 import type {Metadata} from "next";
-import Link from "next/link";
+
 import {notFound} from "next/navigation";
 import GalleryAlbum from "@/models/GalleryAlbum";
 import {connectToDatabase} from "@/lib/mongodb";
 import {getDefaultSchoolId} from "@/lib/school";
-import {PublicSiteHeader,PublicSiteFooter} from "@/components/public-site/public-site-chrome";
+import {PublicSiteHeader, PublicSiteFooter} from "@/components/public-site/public-site-chrome";
 type Props={params:Promise<{slug:string}>};
 export const dynamic="force-dynamic";
 async function getAlbum(slug:string){if(!process.env.MONGODB_URI)return null;await connectToDatabase();return GalleryAlbum.findOne({schoolId:getDefaultSchoolId(),publishedSlug:slug,status:"published",publishedItems:{$ne:null}}).lean();}
