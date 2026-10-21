@@ -27,8 +27,38 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     robots: { index: slug === "home" || Boolean(page), follow: true }
   };
 }
+function getVideoEmbedUrl(raw: string) {
+  try {
+    const parsed = new URL(raw);
+    const host = parsed.hostname.toLowerCase().replace(/^www\./, "");
+    if (host === "youtu.be") {
+      const id = parsed.pathname.split("/").filter(Boolean)[0] || "";
+      return /^[A-Za-z0-9_-]{11}$/.test(id) ? "https://www.youtube-nocookie.com/embed/" + id : null;
+    }
+    if (host === "youtube.com" || host === "m.youtube.com") {
+      const parts = parsed.pathname.split("/").filter(Boolean);
+      const id = parsed.searchParams.get("v") || (["embed", "shorts", "live"].includes(parts[0]) ? parts[1] : "");
+      return id && /^[A-Za-z0-9_-]{11}$/.test(id) ? "https://www.youtube-nocookie.com/embed/" + id : null;
+    }
+    if (host === "vimeo.com" || host === "player.vimeo.com") {
+      const parts = parsed.pathname.split("/").filter(Boolean);
+      const id = host === "player.vimeo.com" ? parts[1] : parts[parts.length - 1];
+      return id && /^\d{5,12}$/.test(id) ? "https://player.vimeo.com/video/" + id : null;
+    }
+  } catch {
+    return null;
+  }
+  return null;
+}
+
 function RenderBlock({ block }: { block: PageBlock }) {
   if (!block.visible) return null;
+  if (block.type === "videoEmbed") {
+    const embedUrl = getVideoEmbedUrl(String(block.videoUrl || ""));
+    if (!embedUrl) return null;
+    return <section className="section-pad"><div className="container-site"><div className="mx-auto max-w-4xl">{block.title ? <h2 className="mb-4 text-2xl font-bold text-ink md:text-3xl">{block.title}</h2> : null}<div className="aspect-video overflow-hidden rounded-2xl bg-slate-100 shadow-soft"><iframe src={embedUrl} title={String(block.title || "School video")} className="h-full w-full" loading="lazy" referrerPolicy="strict-origin-when-cross-origin" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowFullScreen sandbox="allow-scripts allow-same-origin allow-presentation allow-popups" /></div>{block.caption ? <p className="mt-3 text-sm text-slate-500">{block.caption}</p> : null}</div></div></section>;
+  }
+
   if (block.type === "hero") return <section className="hero-landing"><div className="container-site hero-content py-24 md:py-32"><p className="eyebrow !text-gold">{block.eyebrow}</p><h1 className="mt-5 max-w-4xl text-4xl font-bold leading-tight tracking-tight sm:text-5xl md:text-7xl">{block.title}</h1><p className="mt-6 max-w-2xl text-lg leading-8 text-slate-200">{block.subtitle}</p>{block.buttonLabel ? <div className="mt-8"><Link className="btn-primary" href={block.buttonHref || "/"}>{block.buttonLabel}</Link></div> : null}</div></section>;
   if (block.type === "richText") return <section className="section-pad container-site"><div className="max-w-3xl">{block.title ? <h2 className="text-3xl font-bold tracking-tight">{block.title}</h2> : null}<p className="mt-5 whitespace-pre-wrap text-base leading-8 text-slate-600">{block.body}</p></div></section>;
   if (block.type === "cta") return <section className="container-site py-8"><div className="rounded-3xl bg-teal px-7 py-10 text-white md:px-12"><h2 className="text-3xl font-bold">{block.title}</h2><p className="mt-3 max-w-2xl leading-7 text-white/90">{block.body}</p>{block.buttonLabel ? <Link className="mt-6 inline-flex rounded-full bg-white px-5 py-3 font-bold text-ink" href={block.buttonHref || "/contact"}>{block.buttonLabel}</Link> : null}</div></section>;
