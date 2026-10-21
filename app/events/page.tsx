@@ -1,10 +1,10 @@
 import type {Metadata} from "next";
-import Link from "next/link";
-import {CalendarDays,MapPin} from "lucide-react";
+
+import {CalendarDays, MapPin} from "lucide-react";
 import SchoolEvent from "@/models/SchoolEvent";
 import {connectToDatabase} from "@/lib/mongodb";
 import {getDefaultSchoolId} from "@/lib/school";
-import {PublicSiteHeader,PublicSiteFooter} from "@/components/public-site/public-site-chrome";
+import {PublicSiteHeader, PublicSiteFooter} from "@/components/public-site/public-site-chrome";
 export const metadata:Metadata={title:"School events",description:"Published school events and activities."};
 export const dynamic="force-dynamic";
 export default async function EventsPage(){
