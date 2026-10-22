@@ -54,7 +54,7 @@ The test suite is intentionally blocked unless the dispatch confirmation is true
 
 ## 4. Scheduled monitoring
 
-The `Staging uptime and database readiness` workflow probes `/api/health` and `/api/ready` every six hours and can also be run manually. It requires the `STAGING_BASE_URL` environment variable. Configure GitHub Actions notifications to reach the responsible operator and review failures promptly. This is a simple scheduled probe, not full external monitoring or an incident-response service. Production still needs hosting/provider-native alerts, error-rate and email-delivery monitoring, access to logs, an on-call owner and an escalation path.
+The `Staging uptime and database readiness` workflow probes `/api/health` and `/api/ready` every six hours. Configure the `STAGING_BASE_URL` variable in the `staging` GitHub environment. The `Production uptime and database readiness` workflow probes the same non-mutating endpoints every 15 minutes after `PRODUCTION_BASE_URL` is configured in the `production` GitHub environment. If the production variable is empty, the production workflow records that monitoring is not configured and makes no network requests. Configure GitHub Actions notifications to reach the responsible operator and review failures promptly. These probes cover basic site/database availability only; they are not full external monitoring or an incident-response service. Production still needs hosting/provider-native alerting, error-rate and email-delivery monitoring, access to logs, an on-call owner and an escalation path.
 
 ## 5. Backup/restore and rollback drill — operator sign-off required
 
