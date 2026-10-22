@@ -49,6 +49,8 @@ let browser;
 const contexts = new Map();
 let editorCreatedPageId = null;
 let editorCreatedSlug = null;
+let isolationPageId = null;
+let isolationSchoolId = null;
 let temporaryApplicationId = null;
 let temporaryDocumentId = null;
 let temporaryMediaId = null;
@@ -289,6 +291,54 @@ async function runRolePermissionChecks() {
   });
   return { schoolAdmin, superAdmin, editor, publisher, admissions, enquiries, media };
 }
+async function runTenantIsolationCheck(roles) {
+  const suffix = Date.now().toString(36) + "-" + randomBytes(3).toString("hex");
+  const schoolId = "release-isolation-" + suffix;
+  const slug = "release-isolation-" + suffix;
+  const created = await authRequest(roles.superAdmin.request, "POST", "/api/v1/admin/pages", {
+    schoolId,
+    title: "Tenant Isolation Check " + suffix,
+    slug,
+    draftContent: {
+      blocks: [{ id: "tenant-isolation", type: "richText", visible: true, title: "Synthetic tenant boundary test", body: "Synthetic isolation fixture; never publish." }],
+      seo: { title: "Tenant isolation check", description: "Automated synthetic test.", ogImage: "" }
+    }
+  }, 201);
+  isolationPageId = created.data?.id || created.data?._id;
+  isolationSchoolId = schoolId;
+  assert.ok(isolationPageId, "Super administrator could not create the isolated fixture page.");
+
+  const adminList = await expectStatus(
+    await roles.schoolAdmin.request.get(absolute("/api/v1/admin/pages?q=" + encodeURIComponent(slug))),
+    200,
+    "School admin must only list pages in its own school"
+  );
+  assert.ok(!objectList(adminList).some((item) => item.id === isolationPageId || item.slug === slug),
+    "A school admin saw a page from another school.");
+  await expectStatus(
+    await roles.schoolAdmin.request.get(absolute("/api/v1/admin/pages/" + isolationPageId)),
+    404,
+    "School admin must not read another school's page"
+  );
+  await expectStatus(
+    await roles.editor.request.get(absolute("/api/v1/admin/pages/" + isolationPageId)),
+    404,
+    "Editor must not read another school's page"
+  );
+  await expectStatus(
+    await roles.superAdmin.request.get(absolute("/api/v1/admin/pages/" + isolationPageId)),
+    200,
+    "Platform super administrator should be able to inspect the isolated fixture"
+  );
+  await expectStatus(
+    await roles.superAdmin.request.delete(absolute("/api/v1/admin/pages/" + isolationPageId)),
+    204,
+    "Delete isolated tenant fixture"
+  );
+  isolationPageId = null;
+  isolationSchoolId = null;
+  note("Cross-school page isolation and super-administrator scope", { isolatedSchoolId: schoolId });
+}
 async function runPublishingFlow(roles) {
   const suffix = Date.now().toString(36) + "-" + randomBytes(3).toString("hex");
   const slug = "release-check-" + suffix;
@@ -510,6 +560,9 @@ async function cleanupTemporaryRecords(roles) {
       failOnStatusCode: false
     }).catch(() => {});
   }
+  if (isolationPageId && roles?.superAdmin) {
+    await roles.superAdmin.request.delete(absolute("/api/v1/admin/pages/" + isolationPageId), { timeout: 15_000, failOnStatusCode: false }).catch(() => {});
+  }
   if (temporaryMediaId && roles?.media) {
     await roles.media.request.delete(absolute("/api/v1/admin/media/" + temporaryMediaId), { timeout: 15_000, failOnStatusCode: false }).catch(() => {});
   }
@@ -583,6 +636,7 @@ async function main() {
 
   const roles = await step("Login and role-based permissions", runRolePermissionChecks);
   try {
+    await step("Cross-school tenant isolation", () => runTenantIsolationCheck(roles));
     await step("Page draft/publish/unpublish lifecycle", () => runPublishingFlow(roles));
     await step("Cloudinary public media upload and cleanup", () => runMediaFlow(roles));
     await step("Admission + private document workflow", () => runAdmissionsPrivateDocumentFlow(roles));
