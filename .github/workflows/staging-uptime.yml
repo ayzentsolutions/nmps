@@ -1,0 +1,46 @@
+name: Staging uptime and database readiness
+
+on:
+  schedule:
+    - cron: "17 */6 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: nmps-staging-uptime
+  cancel-in-progress: true
+
+jobs:
+  probe:
+    name: Public health and MongoDB readiness
+    environment: staging
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    env:
+      STAGING_BASE_URL: ${{ vars.STAGING_BASE_URL }}
+    steps:
+      - name: Verify staging liveness and readiness
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [[ -z "$STAGING_BASE_URL" ]]; then
+            echo "::error::Set STAGING_BASE_URL in GitHub Settings > Environments > staging."
+            exit 1
+          fi
+          if [[ "$STAGING_BASE_URL" != https://* ]]; then
+            echo "::error::STAGING_BASE_URL must be HTTPS."
+            exit 1
+          fi
+          BASE="${STAGING_BASE_URL%/}"
+          HEALTH="$(curl --fail --silent --show-error --max-time 15 "$BASE/api/health")"
+          echo "$HEALTH" | jq -e '.status == "ok"' >/dev/null
+          READY="$(curl --fail --silent --show-error --max-time 20 "$BASE/api/ready")"
+          echo "$READY" | jq -e '.status == "ready" and .database == "connected"' >/dev/null
+          {
+            echo "## NMPS staging uptime probe"
+            echo "- Checked at (UTC): $(date -u +'%Y-%m-%d %H:%M:%S')"
+            echo "- Public health: passed"
+            echo "- MongoDB readiness: passed"
+          } >> "$GITHUB_STEP_SUMMARY"
