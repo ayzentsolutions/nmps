@@ -389,6 +389,7 @@ async function runMediaFlow(roles) {
 }
 async function runAdmissionsPrivateDocumentFlow(roles) {
   const stamp = new Date().toISOString();
+  const submittedAt = Date.now();
   const syntheticName = "E2E RELEASE CHECK " + stamp;
   const minimalPdf = Buffer.from("%PDF-1.4\n1 0 obj\n<< /Type /Catalog >>\nendobj\ntrailer\n<< /Root 1 0 R >>\n%%EOF\n", "ascii");
   const submission = await roles.admissions.request.post(absolute("/api/v1/admissions/applications"), {
@@ -410,6 +411,9 @@ async function runAdmissionsPrivateDocumentFlow(roles) {
   const reference = submitted.data?.referenceNumber;
   assert.ok(reference, "Admission submission did not return its reference number.");
   assert.equal(submitted.data.documentsUploaded, 1, "Private document upload count does not match.");
+  const confirmation = await findRecentEmail(emailRecipient, "NMPS admission application received", submittedAt);
+  assert.ok(confirmation.body.includes(reference), "Admission confirmation email did not contain the application reference.");
+  await waitForDelivered(confirmation.message.id);
   const list = await expectStatus(await roles.admissions.request.get(absolute("/api/v1/admin/admissions/applications?q=" + encodeURIComponent(reference))), 200, "Read back synthetic application");
   const record = objectList(list).find((item) => item.referenceNumber === reference);
   assert.ok(record?.id, "Could not locate the synthetic application in the staff workspace.");
@@ -437,9 +441,10 @@ async function runAdmissionsPrivateDocumentFlow(roles) {
     failOnStatusCode: false,
     timeout: 20_000
   }), 200, "Mark synthetic application withdrawn");
-  note("Admission submission, authenticated private raw storage, document authorization, signed download and cleanup", { reference, syntheticRecordMarkedWithdrawn: true });
+  note("Admission submission, application confirmation delivery, authenticated private storage, document authorization, signed download and cleanup", { reference, syntheticRecordMarkedWithdrawn: true });
 }
 async function runEnquiryFlow(roles) {
+  const submittedAt = Date.now();
   const referenceText = "E2E release-check " + new Date().toISOString();
   const response = await contexts.get("anonymous").request.post(absolute("/api/v1/enquiries"), {
     data: {
@@ -456,6 +461,9 @@ async function runEnquiryFlow(roles) {
   const body = await expectStatus(response, 201, "Public enquiry submission");
   const reference = body.data?.referenceNumber;
   assert.ok(reference, "Public enquiry did not return a reference number.");
+  const confirmation = await findRecentEmail(emailRecipient, "NMPS enquiry received: " + reference, submittedAt);
+  assert.ok(confirmation.body.includes(reference), "Enquiry confirmation email did not contain the enquiry reference.");
+  await waitForDelivered(confirmation.message.id);
   const listed = await expectStatus(await roles.enquiries.request.get(absolute("/api/v1/admin/enquiries?q=" + encodeURIComponent(reference))), 200, "Enquiry staff readback");
   const item = objectList(listed).find((entry) => entry.referenceNumber === reference);
   assert.ok(item?.id, "Enquiry staff could not see the newly submitted enquiry.");
@@ -465,7 +473,7 @@ async function runEnquiryFlow(roles) {
     timeout: 20_000
   }), 200, "Close synthetic enquiry");
   await expectStatus(await roles.admissions.request.get(absolute("/api/v1/admin/enquiries?q=" + encodeURIComponent(reference))), 403, "Admissions staff must not read enquiries");
-  note("Public enquiry submission, role-scoped readback and cleanup/status closure", { reference });
+  note("Public enquiry submission, confirmation delivery, role-scoped readback and status closure", { reference });
 }
 async function runPasswordRecoveryFlow() {
   const before = Date.now();
@@ -497,6 +505,15 @@ async function runPasswordRecoveryFlow() {
   const completedBody = await expectStatus(complete, 200, "Complete password reset with delivered token");
   assert.match(completedBody.message || "", /Password updated/i, "Password recovery completion did not succeed.");
   resetPasswordChanged = true;
+  await expectStatus(
+    await anonymous.post(absolute("/api/v1/auth/password-reset/complete"), {
+      data: { token, password: "Another-Release-Password-Not-Used" },
+      timeout: 30_000,
+      failOnStatusCode: false
+    }),
+    400,
+    "A reset token must not be reusable"
+  );
 
   const resetUser = await signIn("reset_test", { email: resetTestEmail, password: resetTemporaryPassword }, null);
   const restore = await authRequest(resetUser.request, "POST", "/api/v1/auth/change-password", {
