@@ -1,0 +1,83 @@
+name: Staging release verification
+
+on:
+  workflow_dispatch:
+    inputs:
+      confirm_staging_only:
+        description: "Confirm STAGING_BASE_URL points to an isolated staging app and database, never production."
+        type: boolean
+        required: true
+        default: false
+
+permissions:
+  contents: read
+
+concurrency:
+  group: nmps-staging-release-verification
+  cancel-in-progress: false
+
+jobs:
+  verify:
+    name: Integration, permissions, accessibility and recovery checks
+    if: ${{ inputs.confirm_staging_only }}
+    environment: staging
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    env:
+      CONFIRM_STAGING_ONLY: "true"
+      STAGING_BASE_URL: ${{ vars.STAGING_BASE_URL }}
+      STAGING_SUPER_ADMIN_EMAIL: ${{ secrets.STAGING_SUPER_ADMIN_EMAIL }}
+      STAGING_SUPER_ADMIN_PASSWORD: ${{ secrets.STAGING_SUPER_ADMIN_PASSWORD }}
+      STAGING_SCHOOL_ADMIN_EMAIL: ${{ secrets.STAGING_SCHOOL_ADMIN_EMAIL }}
+      STAGING_SCHOOL_ADMIN_PASSWORD: ${{ secrets.STAGING_SCHOOL_ADMIN_PASSWORD }}
+      STAGING_EDITOR_EMAIL: ${{ secrets.STAGING_EDITOR_EMAIL }}
+      STAGING_EDITOR_PASSWORD: ${{ secrets.STAGING_EDITOR_PASSWORD }}
+      STAGING_PUBLISHER_EMAIL: ${{ secrets.STAGING_PUBLISHER_EMAIL }}
+      STAGING_PUBLISHER_PASSWORD: ${{ secrets.STAGING_PUBLISHER_PASSWORD }}
+      STAGING_ADMISSIONS_EMAIL: ${{ secrets.STAGING_ADMISSIONS_EMAIL }}
+      STAGING_ADMISSIONS_PASSWORD: ${{ secrets.STAGING_ADMISSIONS_PASSWORD }}
+      STAGING_ENQUIRY_EMAIL: ${{ secrets.STAGING_ENQUIRY_EMAIL }}
+      STAGING_ENQUIRY_PASSWORD: ${{ secrets.STAGING_ENQUIRY_PASSWORD }}
+      STAGING_MEDIA_MANAGER_EMAIL: ${{ secrets.STAGING_MEDIA_MANAGER_EMAIL }}
+      STAGING_MEDIA_MANAGER_PASSWORD: ${{ secrets.STAGING_MEDIA_MANAGER_PASSWORD }}
+      STAGING_RESET_TEST_EMAIL: ${{ secrets.STAGING_RESET_TEST_EMAIL }}
+      STAGING_RESET_TEST_PASSWORD: ${{ secrets.STAGING_RESET_TEST_PASSWORD }}
+      STAGING_EMAIL_TEST_RECIPIENT: ${{ secrets.STAGING_EMAIL_TEST_RECIPIENT }}
+      STAGING_EMAIL_FROM: ${{ secrets.STAGING_EMAIL_FROM }}
+      STAGING_RESEND_API_KEY: ${{ secrets.STAGING_RESEND_API_KEY }}
+      STAGING_CLOUDINARY_CLOUD_NAME: ${{ secrets.STAGING_CLOUDINARY_CLOUD_NAME }}
+      STAGING_CLOUDINARY_API_KEY: ${{ secrets.STAGING_CLOUDINARY_API_KEY }}
+      STAGING_CLOUDINARY_API_SECRET: ${{ secrets.STAGING_CLOUDINARY_API_SECRET }}
+      STAGING_LOAD_CONCURRENCY: "8"
+      STAGING_LOAD_SECONDS: "10"
+    steps:
+      - name: Stop unless staging is explicitly confirmed
+        if: ${{ !inputs.confirm_staging_only }}
+        run: |
+          echo "Refusing to run mutating release checks until you confirm the isolated staging target." >> "$GITHUB_STEP_SUMMARY"
+          exit 1
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - name: Install application dependencies
+        run: npm ci --no-audit --no-fund
+      - name: Install pinned browser verification tools
+        run: npm install --no-save --package-lock=false --no-audit --no-fund playwright@1.64.1 @axe-core/playwright@4.14.0
+      - name: Install Chromium
+        run: npx playwright install --with-deps chromium
+      - name: Check release test syntax
+        run: node --check scripts/staging-release-check.mjs
+      - name: Run full staging release suite
+        run: node scripts/staging-release-check.mjs
+      - name: Upload staging verification report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: nmps-staging-release-report
+          path: artifacts/staging-release-report.json
+          if-no-files-found: warn
+          retention-days: 30
