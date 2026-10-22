@@ -50,7 +50,6 @@ const contexts = new Map();
 let editorCreatedPageId = null;
 let editorCreatedSlug = null;
 let isolationPageId = null;
-let isolationSchoolId = null;
 let temporaryApplicationId = null;
 let temporaryDocumentId = null;
 let temporaryMediaId = null;
@@ -305,7 +304,6 @@ async function runTenantIsolationCheck(roles) {
     }
   }, 201);
   isolationPageId = created.data?.id || created.data?._id;
-  isolationSchoolId = schoolId;
   assert.ok(isolationPageId, "Super administrator could not create the isolated fixture page.");
 
   const adminList = await expectStatus(
@@ -336,7 +334,6 @@ async function runTenantIsolationCheck(roles) {
     "Delete isolated tenant fixture"
   );
   isolationPageId = null;
-  isolationSchoolId = null;
   note("Cross-school page isolation and super-administrator scope", { isolatedSchoolId: schoolId });
 }
 async function runPublishingFlow(roles) {
