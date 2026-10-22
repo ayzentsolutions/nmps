@@ -392,8 +392,7 @@ async function runAdmissionsPrivateDocumentFlow(roles) {
   note("Admission submission, authenticated private raw storage, document authorization, signed download and cleanup", { reference, syntheticRecordMarkedWithdrawn: true });
 }
 async function runEnquiryFlow(roles) {
-  const createdAt = Date.now();
-  const referenceText = "E2E release-check " + new Date(createdAt).toISOString();
+  const referenceText = "E2E release-check " + new Date().toISOString();
   const response = await contexts.get("anonymous").request.post(absolute("/api/v1/enquiries"), {
     data: {
       name: "Automated Release Check",
@@ -509,8 +508,8 @@ async function cleanupTemporaryRecords(roles) {
       failOnStatusCode: false
     }).catch(() => {});
   }
-  if (temporaryMediaId && roles?.media_manager) {
-    await roles.media_manager.request.delete(absolute("/api/v1/admin/media/" + temporaryMediaId), { timeout: 15_000, failOnStatusCode: false }).catch(() => {});
+  if (temporaryMediaId && roles?.media) {
+    await roles.media.request.delete(absolute("/api/v1/admin/media/" + temporaryMediaId), { timeout: 15_000, failOnStatusCode: false }).catch(() => {});
   }
   if (editorCreatedPageId && roles?.publisher && roles?.schoolAdmin) {
     await roles.publisher.request.post(absolute("/api/v1/admin/pages/" + editorCreatedPageId + "/unpublish"), { timeout: 15_000, failOnStatusCode: false }).catch(() => {});
