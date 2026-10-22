@@ -15,7 +15,7 @@ This procedure uses synthetic test records only. Run it against an isolated stag
    - `RESEND_API_KEY`, `EMAIL_FROM`, `ADMISSIONS_NOTIFICATION_EMAIL`, `ENQUIRY_NOTIFICATION_EMAIL`.
    - Rotate/remove `BOOTSTRAP_SECRET` after initial setup; never reuse a production secret for staging.
 4. Visit `/api/health` and `/api/ready`. Health must return `200 { "status": "ok" }`; readiness must return HTTP 200 with `status: "ready"` and `database: "connected"`.
-5. Create dedicated, active staging staff accounts with the correct role for each of these: `super_admin`, `school_admin`, `editor`, `publisher`, `admissions_staff`, `enquiry_staff`, and `media_manager`. The workflow checks server-side access grants for each. None of these test accounts should have a forced password change pending.
+5. Create dedicated, active staging staff accounts with the correct role for each of these: `super_admin`, `school_admin`, `editor`, `publisher`, `admissions_staff`, `enquiry_staff`, and `media_manager`. All non-super-admin fixtures must use the same staging school ID as `DEFAULT_SCHOOL_ID`, because public admissions/enquiries are created in that configured school scope. The workflow checks server-side access grants and cross-school page isolation. None of these test accounts should have a forced password change pending.
 6. Create one dedicated, active staging reset-test account, with a known original password of at least 14 characters, a verified email inbox you can read, and permission to use the staging workspace. Do not use a real staff member's account.
 7. Select a monitored test recipient mailbox for staging messages, preferably distinct from real applicant addresses. Verify the Resend sender domain and configure its sending capability before testing.
 
