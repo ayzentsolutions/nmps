@@ -386,8 +386,9 @@ async function runAdmissionsPrivateDocumentFlow(roles) {
   await expectStatus(await roles.admissions.request.delete(absolute("/api/v1/admin/admissions/applications/" + record.id + "/documents/" + document.id)), 204, "Private document cleanup");
   temporaryDocumentId = null;
   await expectStatus(await roles.admissions.request.patch(absolute("/api/v1/admin/admissions/applications/" + record.id), {
-    status: "withdrawn",
-    note: "Automated staging release check; synthetic data only."
+    data: { status: "withdrawn", note: "Automated staging release check; synthetic data only." },
+    failOnStatusCode: false,
+    timeout: 20_000
   }), 200, "Mark synthetic application withdrawn");
   note("Admission submission, authenticated private raw storage, document authorization, signed download and cleanup", { reference, syntheticRecordMarkedWithdrawn: true });
 }
@@ -412,8 +413,9 @@ async function runEnquiryFlow(roles) {
   const item = objectList(listed).find((entry) => entry.referenceNumber === reference);
   assert.ok(item?.id, "Enquiry staff could not see the newly submitted enquiry.");
   await expectStatus(await roles.enquiries.request.patch(absolute("/api/v1/admin/enquiries/" + item.id), {
-    status: "closed",
-    internalNote: "Automated staging release check; synthetic record only."
+    data: { status: "closed", internalNote: "Automated staging release check; synthetic record only." },
+    failOnStatusCode: false,
+    timeout: 20_000
   }), 200, "Close synthetic enquiry");
   await expectStatus(await roles.admissions.request.get(absolute("/api/v1/admin/enquiries?q=" + encodeURIComponent(reference))), 403, "Admissions staff must not read enquiries");
   note("Public enquiry submission, role-scoped readback and cleanup/status closure", { reference });
