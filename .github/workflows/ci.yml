@@ -27,6 +27,8 @@ jobs:
           node-version: 22
       - name: Install dependencies
         run: npm ci --no-audit --no-fund
+      - name: Validate release-check script syntax
+        run: node --check scripts/staging-release-check.mjs
       - name: ESLint
         run: npm run lint
       - name: TypeScript
