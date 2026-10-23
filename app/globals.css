@@ -98,7 +98,6 @@ button:disabled, input:disabled, textarea:disabled, select:disabled {
 }
 .admin-shell {
   min-height: 100vh;
-  overflow-x: clip;
   background: #f5f7fa;
   color: var(--ink);
 }
