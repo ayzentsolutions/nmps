@@ -39,12 +39,7 @@ export default async function Dashboard() {
     </header>
     <main className="mx-auto max-w-7xl px-5 py-10">
       <p className="eyebrow">Your workspace</p><h1 className="mt-2 text-3xl font-bold">Good to see you.</h1><p className="mt-3 max-w-2xl leading-7 text-slate-500">Manage the school information and operational tasks available to your staff role. Draft content stays private until explicitly published.</p>
-      <div className="mt-8 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        <div className="content-card"><p className="text-sm text-slate-500">Workspace</p><p className="mt-2 text-2xl font-bold">Content</p><p className="mt-2 text-xs text-slate-500">MongoDB-backed school records</p></div>
-        <div className="content-card"><p className="text-sm text-slate-500">Publishing</p><p className="mt-2 text-2xl font-bold">Draft → Live</p><p className="mt-2 text-xs text-slate-500">Separate draft and public snapshots</p></div>
-        <div className="content-card"><p className="text-sm text-slate-500">Access</p><p className="mt-2 text-2xl font-bold">Role-based</p><p className="mt-2 text-xs text-slate-500">Staff tools are shown by assigned role</p></div>
-        <div className="content-card"><p className="text-sm text-slate-500">School scope</p><p className="mt-2 break-words text-lg font-bold">{session.user.schoolId}</p><p className="mt-2 text-xs text-slate-500">Scoped data access</p></div>
-      </div>
+      <div className="mt-6 max-w-2xl border-l-2 border-teal pl-4 text-sm leading-6 text-slate-600">Choose a workspace below to manage website content, admissions, enquiries, media, or staff access. Available tools depend on your assigned role.</div>
       <h2 className="mt-10 text-lg font-bold">Your workspaces</h2>
       {visibleModules.length ? <div className="mt-4 grid gap-4 md:grid-cols-2 xl:grid-cols-4">{visibleModules.map((module) => { const Icon = module.icon; return <Link key={module.title} href={module.href} className="content-card group transition hover:-translate-y-0.5 hover:shadow-soft"><span className={"inline-flex rounded-xl p-3 " + module.tone}><Icon size={20}/></span><h3 className="mt-5 flex items-center justify-between gap-2 font-bold">{module.title}<ArrowUpRight size={16} className="shrink-0 text-slate-400 group-hover:text-teal"/></h3><p className="mt-2 text-sm leading-6 text-slate-500">{module.body}</p></Link>; })}</div> : <p className="mt-4 rounded-xl border border-slate-200 bg-white p-5 text-sm text-slate-600">No workspaces are assigned to this account. Contact your school administrator.</p>}
       <h2 className="mt-10 text-lg font-bold">Account & security</h2>

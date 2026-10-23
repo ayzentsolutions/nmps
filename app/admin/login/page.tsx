@@ -11,7 +11,7 @@ export default async function AdminLoginPage({ searchParams }: Props) {
   const passwordChanged = params.passwordChanged === "1";
 
   return <main className="grid min-h-screen bg-paper lg:grid-cols-2">
-    <section className="relative hidden overflow-hidden bg-ink p-12 text-white lg:flex lg:flex-col lg:justify-between"><div className="absolute -right-28 -top-28 h-96 w-96 rounded-full bg-teal/30 blur-3xl"/>
+    <section className="relative hidden overflow-hidden bg-ink p-12 text-white lg:flex lg:flex-col lg:justify-between"><div className="absolute inset-x-12 top-0 h-px bg-white/15" aria-hidden="true"/>
       <Link href="/" className="relative inline-flex items-center gap-3 font-bold"><span className="rounded-xl bg-white/10 p-3"><School size={24}/></span><span>School CMS<span className="mt-1 block text-xs font-normal text-slate-300">Content and communications</span></span></Link>
       <div className="relative max-w-lg"><p className="eyebrow !text-gold">A connected school community</p><h1 className="mt-5 text-5xl font-bold leading-tight">Your school’s story, thoughtfully told.</h1><p className="mt-5 max-w-md leading-7 text-slate-300">Manage pages and publish updates through one secure workspace.</p></div><p className="relative text-xs text-slate-400">Authorized staff access only.</p>
     </section>
