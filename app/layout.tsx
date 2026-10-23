@@ -14,8 +14,8 @@ export async function generateMetadata(): Promise<Metadata> {
     };
   } catch {
     return {
-      title: { default: "School Website", template: "%s | School Website" },
-      description: "Official school information, learning updates, events and admissions."
+      title: { default: "Neeraj Memorial Public School", template: "%s | Neeraj Memorial Public School" },
+      description: "Official notices, events, admissions and school information."
     };
   }
 }

@@ -4,23 +4,23 @@ import { getDefaultSchoolId } from "@/lib/school";
 
 export const DEFAULT_SITE_SETTINGS = {
   schoolId:"default-school",
-  schoolName:"School Website",
-  tagline:"Learn · Grow · Lead",
+  schoolName:"Neeraj Memorial Public School",
+  tagline:"",
   logoUrl:"",
   faviconUrl:"",
-  theme:{primaryColor:"#10233f",accentColor:"#1d837c",highlightColor:"#d9b36c",bodyFont:"Arial" as const,containerWidth:"standard" as const,sectionSpacing:"comfortable" as const},
+  theme:{primaryColor:"#10233f",accentColor:"#176f69",highlightColor:"#d9b36c",bodyFont:"Arial" as const,containerWidth:"standard" as const,sectionSpacing:"comfortable" as const},
   navigation:[
-    {id:"about",label:"About",href:"/about-the-school",children:[]},
-    {id:"academics",label:"Academics",href:"/academics",children:[]},
-    {id:"admissions",label:"Admissions",href:"/admissions",children:[]},
     {id:"notices",label:"Notices",href:"/notices",children:[]},
+    {id:"events",label:"Events",href:"/events",children:[]},
+    {id:"gallery",label:"Gallery",href:"/gallery",children:[]},
+    {id:"admissions",label:"Admissions",href:"/admissions",children:[]},
     {id:"contact",label:"Contact",href:"/contact",children:[]}
   ],
   contact:{address:"",email:"",phone:""},
   socialLinks:[],
   announcement:{enabled:false,message:"",href:""},
   footerText:"",
-  seo:{title:"School Website",description:"Official school information, learning updates, events and admissions.",ogImage:""}
+  seo:{title:"Neeraj Memorial Public School",description:"Official notices, events, admissions and school information.",ogImage:""}
 };
 
 export async function getSiteSettings(schoolId=getDefaultSchoolId()) {
