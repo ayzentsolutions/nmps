@@ -1,5 +1,5 @@
 "use client";
-
+import { readApiResponse } from "@/lib/client-api";
 import {useState, type FormEvent} from "react";
 import {CheckCircle2, Mail, MessageSquare} from "lucide-react";
 import {PublicSiteHeader, PublicSiteFooter} from "@/components/public-site/public-site-chrome";
@@ -8,7 +8,7 @@ export default function ContactPage(){
  const [form,setForm]=useState(initial);const [busy,setBusy]=useState(false);const [error,setError]=useState("");const [reference,setReference]=useState("");
  async function submit(event:FormEvent<HTMLFormElement>){
   event.preventDefault();setBusy(true);setError("");setReference("");
-  try{const response=await fetch("/api/v1/enquiries",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(form)});const body=await response.json();if(!response.ok)throw new Error(body.error||"Could not send enquiry.");setReference(body.data.referenceNumber);setForm(initial);}
+  try{const response=await fetch("/api/v1/enquiries",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(form)});const body=await readApiResponse(response);if(!response.ok)throw new Error(body.error||"Could not send enquiry.");setReference(body.data.referenceNumber);setForm(initial);}
   catch(e){setError(e instanceof Error?e.message:"Could not send enquiry.");}finally{setBusy(false);}
  }
  return <main className="min-h-screen bg-paper"><PublicSiteHeader />

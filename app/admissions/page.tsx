@@ -1,5 +1,5 @@
 "use client";
-
+import { readApiResponse } from "@/lib/client-api";
 import {useState, type FormEvent} from "react";
 import {CheckCircle2, GraduationCap, ShieldCheck} from "lucide-react";
 import {PublicSiteHeader, PublicSiteFooter} from "@/components/public-site/public-site-chrome";
@@ -11,7 +11,7 @@ export default function AdmissionsPage(){
   try{
    const payload=new FormData();Object.entries({...form,dateOfBirth:form.dateOfBirth||""}).forEach(([key,value])=>payload.set(key,value));documents.forEach((file)=>payload.append("documents",file));
    const response=await fetch("/api/v1/admissions/applications",{method:"POST",body:payload});
-   const body=await response.json();if(!response.ok)throw new Error(body.error||"Application submission failed.");
+   const body=await readApiResponse(response);if(!response.ok)throw new Error(body.error||"Application submission failed.");
    setReference(body.data.referenceNumber);setForm(initial);setDocuments([]);
   }catch(e){setError(e instanceof Error?e.message:"Application submission failed.");}finally{setBusy(false);}
  }
