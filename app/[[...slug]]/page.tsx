@@ -56,16 +56,17 @@ function getVideoEmbedUrl(raw: string) {
 }
 
 function hasRenderableBlock(block: PageBlock) {
+  const text = (value: unknown) => typeof value === "string" ? value.trim() : "";
   if (!block.visible) return false;
-  if (block.type === "hero") return Boolean(block.title.trim() || block.subtitle.trim() || (block.buttonLabel.trim() && block.buttonHref.trim()));
-  if (block.type === "richText") return Boolean(block.title.trim() || block.body.trim());
-  if (block.type === "cta") return Boolean(block.title.trim() || block.body.trim() || (block.buttonLabel.trim() && block.buttonHref.trim()));
-  if (block.type === "imageText") return Boolean(block.title.trim() || block.body.trim() || block.imageUrl.trim());
-  if (block.type === "stats") return Array.isArray(block.items) && block.items.some((item) => item.label.trim() && item.value.trim());
-  if (block.type === "cardGrid") return Array.isArray(block.items) && block.items.some((item) => item.title.trim() || item.body.trim());
-  if (block.type === "faq") return Array.isArray(block.items) && block.items.some((item) => item.question.trim() && item.answer.trim());
-  if (block.type === "imageGallery") return Array.isArray(block.items) && block.items.some((item) => item.imageUrl.trim());
-  if (block.type === "downloadList") return Array.isArray(block.items) && block.items.some((item) => item.fileUrl.trim());
+  if (block.type === "hero") return Boolean(text(block.title) || text(block.subtitle) || (text(block.buttonLabel) && text(block.buttonHref)));
+  if (block.type === "richText") return Boolean(text(block.title) || text(block.body));
+  if (block.type === "cta") return Boolean(text(block.title) || text(block.body) || (text(block.buttonLabel) && text(block.buttonHref)));
+  if (block.type === "imageText") return Boolean(text(block.title) || text(block.body) || text(block.imageUrl));
+  if (block.type === "stats") return Array.isArray(block.items) && block.items.some((item) => text(item.label) && text(item.value));
+  if (block.type === "cardGrid") return Array.isArray(block.items) && block.items.some((item) => text(item.title) || text(item.body));
+  if (block.type === "faq") return Array.isArray(block.items) && block.items.some((item) => text(item.question) && text(item.answer));
+  if (block.type === "imageGallery") return Array.isArray(block.items) && block.items.some((item) => text(item.imageUrl));
+  if (block.type === "downloadList") return Array.isArray(block.items) && block.items.some((item) => text(item.fileUrl));
   if (block.type === "videoEmbed") return Boolean(getVideoEmbedUrl(String(block.videoUrl || "")));
   return false;
 }
