@@ -55,6 +55,21 @@ function getVideoEmbedUrl(raw: string) {
   return null;
 }
 
+function hasRenderableBlock(block: PageBlock) {
+  if (!block.visible) return false;
+  if (block.type === "hero") return Boolean(block.title.trim() || block.subtitle.trim() || (block.buttonLabel.trim() && block.buttonHref.trim()));
+  if (block.type === "richText") return Boolean(block.title.trim() || block.body.trim());
+  if (block.type === "cta") return Boolean(block.title.trim() || block.body.trim() || (block.buttonLabel.trim() && block.buttonHref.trim()));
+  if (block.type === "imageText") return Boolean(block.title.trim() || block.body.trim() || block.imageUrl.trim());
+  if (block.type === "stats") return Array.isArray(block.items) && block.items.some((item) => item.label.trim() && item.value.trim());
+  if (block.type === "cardGrid") return Array.isArray(block.items) && block.items.some((item) => item.title.trim() || item.body.trim());
+  if (block.type === "faq") return Array.isArray(block.items) && block.items.some((item) => item.question.trim() && item.answer.trim());
+  if (block.type === "imageGallery") return Array.isArray(block.items) && block.items.some((item) => item.imageUrl.trim());
+  if (block.type === "downloadList") return Array.isArray(block.items) && block.items.some((item) => item.fileUrl.trim());
+  if (block.type === "videoEmbed") return Boolean(getVideoEmbedUrl(String(block.videoUrl || "")));
+  return false;
+}
+
 function RenderBlock({ block }: { block: PageBlock }) {
   if (!block.visible) return null;
   const rawBlock = block as unknown as Record<string, unknown>;
@@ -90,6 +105,7 @@ export default async function PublicPage({ params }: Props) {
   const [page, settings] = await Promise.all([getPublishedPage(slug), getSiteSettings()]);
   if (!page && slug !== "home") notFound();
   const content = page?.publishedContent as PageContent | null;
+  const publicBlocks = (content?.blocks || []).filter(hasRenderableBlock);
   const themeStyle = { "--site-primary": settings.theme.primaryColor, "--site-accent": settings.theme.accentColor, "--site-highlight": settings.theme.highlightColor, "--site-container": settings.theme.containerWidth === "narrow" ? "920px" : settings.theme.containerWidth === "wide" ? "1380px" : "1180px", "--site-section-space": settings.theme.sectionSpacing === "compact" ? "56px" : settings.theme.sectionSpacing === "spacious" ? "112px" : "86px", fontFamily: settings.theme.bodyFont } as CSSProperties;
-  return <main style={themeStyle}><PublicSiteHeader />{content?.blocks?.length ? content.blocks.map((block,index)=><RenderBlock key={block.id || index} block={block}/>) : <section className="section-pad container-site"><div className="mx-auto max-w-2xl border-t border-slate-200 pt-10"><p className="eyebrow">Website information</p><h1 className="mt-3 text-3xl font-bold tracking-tight">Homepage not published</h1><p className="mt-4 leading-7 text-slate-600">The school has not published its homepage yet. Please check back later or contact the school office for current information.</p></div></section>}<PublicSiteFooter /></main>;
+  return <main style={themeStyle}><PublicSiteHeader />{publicBlocks.length ? publicBlocks.map((block,index)=><RenderBlock key={block.id || index} block={block}/>) : <section className="section-pad container-site"><div className="mx-auto max-w-2xl border-t border-slate-200 pt-10"><p className="eyebrow">Website information</p><h1 className="mt-3 text-3xl font-bold tracking-tight">Homepage not published</h1><p className="mt-4 leading-7 text-slate-600">The school has not published its homepage yet. Please check back later or contact the school office for current information.</p></div></section>}<PublicSiteFooter /></main>;
 }
