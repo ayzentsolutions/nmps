@@ -1,6 +1,6 @@
 "use client";
 import { readApiResponse } from "@/lib/client-api";
-import {useEffect,useState,type FormEvent} from "react";
+import {useCallback,useEffect,useRef,useState,type FormEvent} from "react";
 import {UserPlus,Search,UserRound,ShieldCheck,UserCheck,UserX} from "lucide-react";
 type Role="super_admin"|"school_admin"|"editor"|"publisher"|"admissions_staff"|"enquiry_staff"|"media_manager";
 type Staff={id:string;name:string;email:string;role:Role;schoolId:string;isActive:boolean;mustChangePassword:boolean;createdAt:string};
@@ -10,8 +10,10 @@ export default function UserManager({role,schoolId}:{role:Role;schoolId:string})
  const isSuper=role==="super_admin";
  const [items,setItems]=useState<Staff[]>([]);const [q,setQ]=useState("");const [busy,setBusy]=useState(false);const [loading,setLoading]=useState(true);const [error,setError]=useState("");const [message,setMessage]=useState("");
  const [form,setForm]=useState({name:"",email:"",password:"",role:"editor" as Role,schoolId});
- async function load(){const params=new URLSearchParams({limit:"50"});if(q)params.set("q",q);const response=await fetch("/api/v1/admin/users?"+params,{cache:"no-store"});const body=await readApiResponse(response);if(!response.ok)throw new Error(body.error||"Could not load staff accounts.");setItems(body.data);}
- useEffect(()=>{load().catch((e:unknown)=>setError(e instanceof Error?e.message:"Could not load staff accounts.")).finally(()=>setLoading(false));},[]);
+ const load = useCallback(async () => {const params=new URLSearchParams({limit:"50"});if(q)params.set("q",q);const response=await fetch("/api/v1/admin/users?"+params,{cache:"no-store"});const body=await readApiResponse(response);if(!response.ok)throw new Error(body.error||"Could not load staff accounts.");setItems(body.data);}, [q]);
+ const loadRef=useRef(load);
+ useEffect(()=>{loadRef.current=load;},[load]);
+ useEffect(()=>{loadRef.current().catch((e:unknown)=>setError(e instanceof Error?e.message:"Could not load staff accounts.")).finally(()=>setLoading(false));},[]);
  async function create(event:FormEvent<HTMLFormElement>){event.preventDefault();setBusy(true);setError("");setMessage("");try{const response=await fetch("/api/v1/admin/users",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(form)});const body=await readApiResponse(response);if(!response.ok)throw new Error(body.error||"Could not create account.");setForm({...form,name:"",email:"",password:"",role:"editor"});await load();setMessage("Staff account created. Share the temporary password securely; first sign-in requires the staff member to choose a new password.");}catch(e){setError(e instanceof Error?e.message:"Could not create account.");}finally{setBusy(false);}}
  async function update(item:Staff,patch:Record<string,unknown>){setError("");setMessage("");try{const response=await fetch("/api/v1/admin/users/"+item.id,{method:"PATCH",headers:{"Content-Type":"application/json"},body:JSON.stringify(patch)});const body=await readApiResponse(response);if(!response.ok)throw new Error(body.error||"Could not update account.");await load();setMessage("Staff account updated.");}catch(e){setError(e instanceof Error?e.message:"Could not update account.");}}
  if(loading)return <div className="content-card p-8 text-sm text-slate-500">Loading staff accounts…</div>;

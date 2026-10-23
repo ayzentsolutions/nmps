@@ -1,6 +1,6 @@
 "use client";
 import { readApiResponse } from "@/lib/client-api";
-import {useEffect,useState,type FormEvent} from "react";
+import {useCallback,useEffect,useRef,useState,type FormEvent} from "react";
 import {CalendarDays,Plus,Save,Send,EyeOff,Trash2} from "lucide-react";
 type MediaChoice={id:string;title:string;secureUrl:string;resourceType:"image"|"raw";format:string};
 type EventItem={id:string;title:string;slug:string;description:string;location:string;imageUrl:string;startAt:string;endAt:string|null;status:"draft"|"published"|"archived";publishedAt:string|null;updatedAt:string};
@@ -9,8 +9,10 @@ function toLocalInput(value:string|null|undefined){if(!value)return"";const date
 export default function EventManager({canManage,canPublish,canDelete}:{canManage:boolean;canPublish:boolean;canDelete:boolean}){
  const [items,setItems]=useState<EventItem[]>([]);const [mediaAssets,setMediaAssets]=useState<MediaChoice[]>([]);const [selected,setSelected]=useState("");const [form,setForm]=useState(fresh());const [q,setQ]=useState("");const [statusFilter,setStatusFilter]=useState("");const [busy,setBusy]=useState(false);const [loading,setLoading]=useState(true);const [error,setError]=useState("");const [message,setMessage]=useState("");
  function select(item:EventItem){setSelected(item.id);setForm({title:item.title,slug:item.slug,description:item.description,location:item.location||"",imageUrl:item.imageUrl||"",startAt:toLocalInput(item.startAt),endAt:toLocalInput(item.endAt)});setError("");setMessage("");}
- async function load(filters: { q?: string; statusFilter?: string } = {}){const params=new URLSearchParams({limit:"50"});const search=filters.q??q;const status=filters.statusFilter??statusFilter;if(search)params.set("q",search);if(status)params.set("status",status);const response=await fetch("/api/v1/admin/events?"+params,{cache:"no-store"});const body=await readApiResponse(response);if(!response.ok)throw new Error(body.error||"Could not load events.");setItems(body.data);return body.data as EventItem[];}
- useEffect(()=>{load().catch((e:unknown)=>setError(e instanceof Error?e.message:"Could not load events.")).finally(()=>setLoading(false));},[]);
+ const load = useCallback(async (filters: { q?: string; statusFilter?: string } = {}) => {const params=new URLSearchParams({limit:"50"});const search=filters.q??q;const status=filters.statusFilter??statusFilter;if(search)params.set("q",search);if(status)params.set("status",status);const response=await fetch("/api/v1/admin/events?"+params,{cache:"no-store"});const body=await readApiResponse(response);if(!response.ok)throw new Error(body.error||"Could not load events.");setItems(body.data);return body.data as EventItem[];}, [q, statusFilter]);
+ const loadRef=useRef(load);
+ useEffect(()=>{loadRef.current=load;},[load]);
+ useEffect(()=>{loadRef.current().catch((e:unknown)=>setError(e instanceof Error?e.message:"Could not load events.")).finally(()=>setLoading(false));},[]);
  useEffect(()=>{fetch("/api/v1/admin/media?limit=50",{cache:"no-store"}).then(async(response)=>{if(!response.ok)return [];const body=await readApiResponse(response);return (body.data as MediaChoice[]).filter((item)=>item.resourceType==="image");}).then(setMediaAssets).catch(()=>setMediaAssets([]));},[]);
  function payload(){return {...form,startAt:form.startAt?new Date(form.startAt).toISOString():"",endAt:form.endAt?new Date(form.endAt).toISOString():null};}
  async function create(event:FormEvent<HTMLFormElement>){event.preventDefault();if(!canManage)return;setBusy(true);setError("");setMessage("");try{const response=await fetch("/api/v1/admin/events",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(payload())});const body=await readApiResponse(response);if(!response.ok)throw new Error(body.error||"Could not create event.");const all=await load();const created=all.find((x)=>x.id===body.data.id);if(created)select(created);setMessage("Event draft created.");}catch(e){setError(e instanceof Error?e.message:"Could not create event.");}finally{setBusy(false);}}

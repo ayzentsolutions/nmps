@@ -48,7 +48,6 @@ const cloudApiSecret = required("STAGING_CLOUDINARY_API_SECRET");
 let browser;
 const contexts = new Map();
 let editorCreatedPageId = null;
-let editorCreatedSlug = null;
 let isolationPageId = null;
 let temporaryApplicationId = null;
 let temporaryDocumentId = null;
@@ -351,7 +350,6 @@ async function runPublishingFlow(roles) {
   const page = created.data;
   assert.ok(page?.id || page?._id, "Page creation response did not include a page ID.");
   editorCreatedPageId = page.id || page._id;
-  editorCreatedSlug = slug;
   const notPublic = await roles.publisher.request.get(absolute("/api/v1/pages?slug=" + encodeURIComponent(slug)));
   await expectStatus(notPublic, 404, "Unpublished draft must be hidden from public page API");
   await publishOrUnpublish(roles.editor.request, "/api/v1/admin/pages/" + editorCreatedPageId + "/publish", 403);

@@ -1,12 +1,14 @@
 "use client";
 import { readApiResponse } from "@/lib/client-api";
-import {useEffect,useState} from "react";
+import {useCallback,useEffect,useRef,useState} from "react";
 import {History,Search,ShieldCheck} from "lucide-react";
 type Entry={id:string;schoolId:string;actorId:string;actorRole:string;action:string;targetType:string;targetId:string;metadata:Record<string,unknown>;createdAt:string};
 export default function AuditLogViewer(){
  const [items,setItems]=useState<Entry[]>([]);const [action,setAction]=useState("");const [actor,setActor]=useState("");const [busy,setBusy]=useState(true);const [error,setError]=useState("");
- async function load(){setBusy(true);setError("");try{const params=new URLSearchParams({limit:"100"});if(action)params.set("action",action);if(actor)params.set("actor",actor);const response=await fetch("/api/v1/admin/audit-logs?"+params,{cache:"no-store"});const body=await readApiResponse(response);if(!response.ok)throw new Error(body.error||"Could not load audit history.");setItems(body.data);}catch(e){setError(e instanceof Error?e.message:"Could not load audit history.");}finally{setBusy(false);}}
- useEffect(()=>{void load();},[]);
+ const load = useCallback(async () => {setBusy(true);setError("");try{const params=new URLSearchParams({limit:"100"});if(action)params.set("action",action);if(actor)params.set("actor",actor);const response=await fetch("/api/v1/admin/audit-logs?"+params,{cache:"no-store"});const body=await readApiResponse(response);if(!response.ok)throw new Error(body.error||"Could not load audit history.");setItems(body.data);}catch(e){setError(e instanceof Error?e.message:"Could not load audit history.");}finally{setBusy(false);}}, [action, actor]);
+ const loadRef=useRef(load);
+ useEffect(()=>{loadRef.current=load;},[load]);
+ useEffect(()=>{void loadRef.current();},[]);
  return <div className="space-y-5"><div><p className="text-sm text-slate-500">Security and accountability</p><h1 className="text-2xl font-bold text-ink">Audit log</h1><p className="mt-1 text-sm text-slate-500">Recent administrative actions, actors and targets. Secrets and record contents are intentionally omitted from audit metadata.</p></div>
  <div className="content-card"><div className="grid gap-3 md:grid-cols-[1fr_1fr_auto]"><label className="text-sm font-semibold">Action<input className="form-field mt-1.5 font-normal" placeholder="e.g. page.published" value={action} onChange={(e)=>setAction(e.target.value)}/></label><label className="text-sm font-semibold">Actor user ID<input className="form-field mt-1.5 font-normal" value={actor} onChange={(e)=>setActor(e.target.value)}/></label><div className="flex items-end"><button onClick={()=>void load()} className="inline-flex w-full items-center justify-center gap-2 rounded-lg bg-teal px-4 py-2.5 text-sm font-bold text-white"><Search size={15}/>Filter</button></div></div></div>
  {error?<p role="alert" className="rounded-xl bg-red-50 p-3 text-sm text-red-700">{error}</p>:null}
