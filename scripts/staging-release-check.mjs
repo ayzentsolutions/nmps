@@ -242,6 +242,48 @@ async function runAccessibilityChecks() {
   }
   note("Automated WCAG 2.1 A/AA scan", { routes: 6, threshold: "zero serious/critical violations" });
 }
+async function runResponsiveChecks(roles) {
+  const widths = [320, 360, 375, 390, 414, 768, 1024, 1280, 1440];
+  const checks = [
+    { name: "public", page: await contexts.get("anonymous").newPage(), paths: ["/", "/admissions", "/contact", "/notices", "/events", "/gallery", "/privacy-policy", "/terms", "/admin/login"] },
+    { name: "super_admin", page: roles.superAdmin.page, paths: ["/admin/dashboard", "/admin/pages", "/admin/media", "/admin/notices", "/admin/events", "/admin/gallery", "/admin/admissions", "/admin/enquiries", "/admin/settings", "/admin/users", "/admin/audit-logs", "/admin/change-password"] },
+    { name: "editor", page: roles.editor.page, paths: ["/admin/dashboard", "/admin/pages", "/admin/media", "/admin/notices", "/admin/events", "/admin/gallery", "/admin/change-password"] },
+    { name: "publisher", page: roles.publisher.page, paths: ["/admin/dashboard", "/admin/pages", "/admin/notices", "/admin/events", "/admin/gallery", "/admin/change-password"] },
+    { name: "admissions_staff", page: roles.admissions.page, paths: ["/admin/dashboard", "/admin/admissions", "/admin/change-password"] },
+    { name: "enquiry_staff", page: roles.enquiries.page, paths: ["/admin/dashboard", "/admin/enquiries", "/admin/change-password"] },
+    { name: "media_manager", page: roles.media.page, paths: ["/admin/dashboard", "/admin/media", "/admin/change-password"] }
+  ];
+
+  let routeCount = 0;
+  for (const check of checks) {
+    for (const path of check.paths) {
+      const response = await check.page.goto(absolute(path), { waitUntil: "domcontentloaded", timeout: 30_000 });
+      assert.ok(response && response.status() === 200, "Responsive check navigation failed for " + check.name + " at " + path);
+      assert.equal(new URL(check.page.url()).pathname, path, "Responsive check was redirected for " + check.name + " at " + path);
+      for (const width of widths) {
+        await check.page.setViewportSize({ width, height: 900 });
+        const dimensions = await check.page.evaluate(() => ({
+          viewport: window.innerWidth,
+          document: document.documentElement.scrollWidth,
+          body: document.body.scrollWidth
+        }));
+        const pageWidth = Math.max(dimensions.document, dimensions.body);
+        assert.ok(
+          pageWidth <= width + 1,
+          "Horizontal overflow at " + width + "px for " + check.name + " " + path +
+            ": document=" + dimensions.document + "px, body=" + dimensions.body + "px"
+        );
+      }
+      routeCount += 1;
+    }
+  }
+  note("Responsive viewport smoke test", {
+    routes: routeCount,
+    widths,
+    threshold: "no document-level horizontal overflow"
+  });
+}
+
 async function runRolePermissionChecks() {
   const schoolAdmin = await signIn("school_admin", credentials.school_admin);
   const superAdmin = await signIn("super_admin", credentials.super_admin);
@@ -647,6 +689,7 @@ async function main() {
   await step("Automated accessibility scan", runAccessibilityChecks);
 
   const roles = await step("Login and role-based permissions", runRolePermissionChecks);
+  await step("Responsive viewport smoke test", () => runResponsiveChecks(roles));
   try {
     await step("Cross-school tenant isolation", () => runTenantIsolationCheck(roles));
     await step("Page draft/publish/unpublish lifecycle", () => runPublishingFlow(roles));
