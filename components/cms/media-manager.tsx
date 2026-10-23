@@ -2,7 +2,7 @@
 /* Native images are used for CMS asset URLs; hosts can be outside next.config.ts remotePatterns. */
 /* eslint-disable @next/next/no-img-element */
 import { readApiResponse } from "@/lib/client-api";
-import {useEffect,useRef,useState,type FormEvent} from "react";
+import {useCallback,useEffect,useRef,useState,type FormEvent} from "react";
 import {FileText,Image as ImageIcon,Upload,Search,Copy,Save,Trash2,ExternalLink} from "lucide-react";
 type Asset={id:string;secureUrl:string;resourceType:"image"|"raw";format:string;bytes:number;originalFilename:string;title:string;altText:string;caption:string;mimeType:string;createdAt:string};
 const bytes=(value:number)=>value<1024*1024?(value/1024).toFixed(0)+" KB":(value/1024/1024).toFixed(1)+" MB";
