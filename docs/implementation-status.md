@@ -1,6 +1,6 @@
 # Implementation and release status
 
-Updated: 2026-10-22.
+Updated: 2026-10-23.
 
 ## Implemented in the repository
 
@@ -16,7 +16,11 @@ Updated: 2026-10-22.
 - Best-effort Resend notifications for admission/enquiry submissions and password reset; delivery depends on a verified sender and deployment settings.
 - Explicitly guarded demo seed and starter privacy/terms pages; these are not production-approved content.
 - CI workflow for ESLint, TypeScript, unit tests and production build.
-- A manual staging release workflow and a six-hour staging liveness/readiness probe have been added on branch `release-readiness-checks-2026-10-22`. The staging suite includes provider connectivity, delivery check, role/permission tests, publishing, public media, private documents, enquiries, password recovery, automated axe scans and a bounded read-only load smoke. **These workflows are repository changes only until reviewed/merged, configured, and run against isolated staging.**
+- Shared frontend design tokens for color, type, spacing, controls, borders, focus indicators, cards and responsive breakpoints; CMS pages use a common API-response reader so HTML/plain-text server failures produce clear errors rather than JSON parser noise.
+- Account & Security screen with password-change and recovery links; role-aware dashboard modules; blank/unknown CMS content blocks no longer present fabricated statistics or generic marketing filler.
+- Status filters for admissions and enquiries pass the selected filter into the request; notices, events and gallery editors now expose supported status filters. Public navigation filters empty/unsafe destinations.
+- Automated responsive viewport smoke checks are implemented in the staging workflow for representative public routes and each staff role at 320, 360, 375, 390, 414, 768, 1024, 1280 and 1440 CSS pixels. This is unverified against a live staging deployment until the workflow is configured and run.
+- The staging release workflow and six-hour staging liveness/readiness probe are present on `main`. The release suite includes provider connectivity, delivery, role/permission tests, publishing, public media, private documents, enquiries, password recovery, automated axe scans, responsive viewport smoke checks, and a bounded read-only load smoke. **These workflow checks are implemented but not verified until configured and run against isolated staging.**
 
 ## Still required before production release
 
@@ -36,6 +40,6 @@ Updated: 2026-10-22.
 
 ## Current evidence and launch decision
 
-The last known main-branch CI run passed on commit `ac9eff63580b29f16d9e8e1d4eddc497b2ef76f6`: [GitHub Actions run 39682655827](https://github.com/ayzentsolutions/nmps/actions/runs/39682655827). It covers lint, type checking, unit tests and production build only.
+CI run [39912001410](https://github.com/ayzentsolutions/nmps/actions/runs/39912001410) passed on commit `10491c1f1a1609d5eded51a57dec5b932714897c`; it covers lint, type checking, unit tests and production build only. It does not prove responsive viewport checks, provider integrations, or user journeys work in a live staging environment.
 
 Do not label the site production-ready until the release-candidate CI passes, the staging suite is configured and green, provider configuration is verified, recovery/rollback and security/accessibility/load checks have recorded results, and the school has documented its content/legal approval.

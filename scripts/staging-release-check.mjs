@@ -247,6 +247,7 @@ async function runResponsiveChecks(roles) {
   const checks = [
     { name: "public", page: await contexts.get("anonymous").newPage(), paths: ["/", "/admissions", "/contact", "/notices", "/events", "/gallery", "/privacy-policy", "/terms", "/admin/login"] },
     { name: "super_admin", page: roles.superAdmin.page, paths: ["/admin/dashboard", "/admin/pages", "/admin/media", "/admin/notices", "/admin/events", "/admin/gallery", "/admin/admissions", "/admin/enquiries", "/admin/settings", "/admin/users", "/admin/audit-logs", "/admin/change-password"] },
+    { name: "school_admin", page: roles.schoolAdmin.page, paths: ["/admin/dashboard", "/admin/pages", "/admin/media", "/admin/notices", "/admin/events", "/admin/gallery", "/admin/admissions", "/admin/enquiries", "/admin/settings", "/admin/users", "/admin/audit-logs", "/admin/change-password"] },
     { name: "editor", page: roles.editor.page, paths: ["/admin/dashboard", "/admin/pages", "/admin/media", "/admin/notices", "/admin/events", "/admin/gallery", "/admin/change-password"] },
     { name: "publisher", page: roles.publisher.page, paths: ["/admin/dashboard", "/admin/pages", "/admin/notices", "/admin/events", "/admin/gallery", "/admin/change-password"] },
     { name: "admissions_staff", page: roles.admissions.page, paths: ["/admin/dashboard", "/admin/admissions", "/admin/change-password"] },
