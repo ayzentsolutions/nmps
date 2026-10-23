@@ -2,8 +2,14 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { School, ShieldCheck } from "lucide-react";
 import LoginForm from "@/components/cms/login-form";
-export const metadata:Metadata={title:"Staff sign in",robots:{index:false,follow:false}};
-export default function AdminLoginPage(){
+
+export const metadata: Metadata = { title: "Staff sign in", robots: { index: false, follow: false } };
+type Props = { searchParams: Promise<{ passwordChanged?: string }> };
+
+export default async function AdminLoginPage({ searchParams }: Props) {
+  const params = await searchParams;
+  const passwordChanged = params.passwordChanged === "1";
+
   return <main className="grid min-h-screen bg-paper lg:grid-cols-2">
     <section className="relative hidden overflow-hidden bg-ink p-12 text-white lg:flex lg:flex-col lg:justify-between"><div className="absolute -right-28 -top-28 h-96 w-96 rounded-full bg-teal/30 blur-3xl"/>
       <Link href="/" className="relative inline-flex items-center gap-3 font-bold"><span className="rounded-xl bg-white/10 p-3"><School size={24}/></span><span>School CMS<span className="mt-1 block text-xs font-normal text-slate-300">Content and communications</span></span></Link>
@@ -12,7 +18,10 @@ export default function AdminLoginPage(){
     <section className="flex items-center justify-center px-6 py-12"><div className="w-full max-w-md">
       <div className="mb-8 flex items-center gap-3 lg:hidden"><span className="rounded-xl bg-ink p-3 text-white"><School size={22}/></span><span className="font-bold">School CMS</span></div>
       <div className="mb-8"><span className="inline-flex rounded-full bg-teal/10 p-3 text-teal"><ShieldCheck size={22}/></span><p className="eyebrow mt-5">Administration portal</p><h2 className="mt-2 text-3xl font-bold">Welcome back</h2><p className="mt-2 leading-6 text-slate-500">Sign in with your staff account to manage school content.</p></div>
-      <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-soft"><LoginForm/></div><div className="mt-4 text-right"><Link href="/admin/forgot-password" className="text-sm font-semibold text-teal underline underline-offset-4">Forgot password?</Link></div><p className="mt-6 text-center text-xs text-slate-500">Need access? Contact your school’s administrator.</p>
+      {passwordChanged ? <p role="status" className="mb-4 rounded-xl border border-emerald-200 bg-emerald-50 p-3 text-sm leading-6 text-emerald-900">Your password was updated successfully. Sign in with your new password.</p> : null}
+      <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-soft"><LoginForm/></div>
+      <div className="mt-4 text-right"><Link href="/admin/forgot-password" className="text-sm font-semibold text-teal underline underline-offset-4">Forgot password?</Link></div>
+      <p className="mt-6 text-center text-xs text-slate-500">Need access? Contact your school’s administrator.</p>
     </div></section>
   </main>;
 }
