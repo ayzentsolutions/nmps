@@ -1,4 +1,5 @@
 "use client";
+import { readApiResponse } from "@/lib/client-api";
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import { ArrowDown, ArrowUp, Copy, Eye, EyeOff, FilePlus2, GripVertical, Monitor, Smartphone, Tablet, Plus, Redo2, Save, Send, Trash2, Undo2, History } from "lucide-react";
 import type { UserRole } from "@/models/User";
@@ -74,19 +75,19 @@ export default function PageBuilder({ role }: { role: UserRole }) {
   }
   async function loadPages() {
     const response = await fetch("/api/v1/admin/pages?limit=50",{cache:"no-store"});
-    const result = await response.json();
+    const result = await readApiResponse(response);
     if (!response.ok) throw new Error(result.error || "Could not load pages.");
     const items = result.data as PageItem[]; setPages(items); return items;
   }
   async function loadVersions() {
     if (!selected) return;
     const response = await fetch("/api/v1/admin/pages/" + selected + "/versions", { cache: "no-store" });
-    const result = await response.json();
+    const result = await readApiResponse(response);
     if (!response.ok) throw new Error(result.error || "Could not load version history.");
     setVersions(result.data as VersionItem[]);
   }
   useEffect(() => { loadPages().then((items)=>{if(items[0]) selectPage(items[0]);}).catch((e:unknown)=>setError(e instanceof Error?e.message:"Could not load pages.")); }, []);
-  useEffect(() => { if (!canEdit) return; fetch("/api/v1/admin/media?limit=50", { cache: "no-store" }).then(async (response) => { if (!response.ok) return []; const result = await response.json(); return result.data as MediaChoice[]; }).then(setMediaAssets).catch(() => setMediaAssets([])); }, [canEdit]);
+  useEffect(() => { if (!canEdit) return; fetch("/api/v1/admin/media?limit=50", { cache: "no-store" }).then(async (response) => { if (!response.ok) return []; const result = await readApiResponse(response); return result.data as MediaChoice[]; }).then(setMediaAssets).catch(() => setMediaAssets([])); }, [canEdit]);
   function changeContent(next: Content) { setHistory((items)=>[...items,content].slice(-30)); setFuture([]); setContent(next); }
   function patchBlock(index:number,patch:Record<string,unknown>) {
     changeContent({...content,blocks:content.blocks.map((block,i)=>i===index?{...block,...patch}:block)});
@@ -96,7 +97,7 @@ export default function PageBuilder({ role }: { role: UserRole }) {
     setBusy(true); setError(""); setMessage("");
     try {
       const response=await fetch("/api/v1/admin/pages",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({title:newTitle.trim(),slug:newSlug.trim(),draftContent:emptyContent})});
-      const result=await response.json(); if(!response.ok) throw new Error(result.error||"Could not create page.");
+      const result=await readApiResponse(response); if(!response.ok) throw new Error(result.error||"Could not create page.");
       const items=await loadPages(); const created=items.find((item)=>item.id===result.data.id);
       if(created) selectPage(created);
       setNewTitle("");setNewSlug("");setMessage("Draft page created.");
@@ -108,7 +109,7 @@ export default function PageBuilder({ role }: { role: UserRole }) {
     setBusy(true);setError("");setMessage("");
     try {
       const response=await fetch("/api/v1/admin/pages/"+selected,{method:"PUT",headers:{"Content-Type":"application/json"},body:JSON.stringify({title,slug,draftContent:content})});
-      const result=await response.json();if(!response.ok) throw new Error(result.error||"Could not save draft.");
+      const result=await readApiResponse(response);if(!response.ok) throw new Error(result.error||"Could not save draft.");
       const items=await loadPages();const updated=items.find((item)=>item.id===selected);if(updated)selectPage(updated);
       setMessage("Draft saved. It is not public until published.");
     } catch(e) {setError(e instanceof Error?e.message:"Could not save draft.");}
@@ -121,10 +122,10 @@ export default function PageBuilder({ role }: { role: UserRole }) {
     try {
       if(!unpublish&&canEdit) {
         const saved=await fetch("/api/v1/admin/pages/"+selected,{method:"PUT",headers:{"Content-Type":"application/json"},body:JSON.stringify({title,slug,draftContent:content})});
-        const saveResult=await saved.json();if(!saved.ok)throw new Error(saveResult.error||"Save failed.");
+        const saveResult=await readApiResponse(saved);if(!saved.ok)throw new Error(saveResult.error||"Save failed.");
       }
       const response=await fetch("/api/v1/admin/pages/"+selected+(unpublish?"/unpublish":"/publish"),{method:"POST"});
-      const result=await response.json();if(!response.ok)throw new Error(result.error||"Publishing failed.");
+      const result=await readApiResponse(response);if(!response.ok)throw new Error(result.error||"Publishing failed.");
       const items=await loadPages();const updated=items.find((item)=>item.id===selected);if(updated)selectPage(updated);
       setMessage(unpublish?"Page unpublished.":"Page published successfully.");
     } catch(e) {setError(e instanceof Error?e.message:"Publishing failed.");}
@@ -139,7 +140,7 @@ export default function PageBuilder({ role }: { role: UserRole }) {
     setBusy(true);setError("");setMessage("");
     try {
       const response=await fetch("/api/v1/admin/pages/"+selected,{method:"DELETE"});
-      if(!response.ok){const result=await response.json();throw new Error(result.error||"Could not delete page.");}
+      if(!response.ok){const result=await readApiResponse(response);throw new Error(result.error||"Could not delete page.");}
       const items=await loadPages();setSelected("");setTitle("");setSlug("");setContent(emptyContent);
       if(items[0])selectPage(items[0]);setMessage("Page deleted.");
     }catch(e){setError(e instanceof Error?e.message:"Could not delete page.");}
@@ -150,7 +151,7 @@ export default function PageBuilder({ role }: { role: UserRole }) {
     setBusy(true); setError(""); setMessage("");
     try {
       const response=await fetch("/api/v1/admin/pages/"+selected+"/versions/"+versionId+"/restore",{method:"POST"});
-      const result=await response.json(); if(!response.ok) throw new Error(result.error||"Could not restore version.");
+      const result=await readApiResponse(response); if(!response.ok) throw new Error(result.error||"Could not restore version.");
       const items=await loadPages(); const updated=items.find((item)=>item.id===selected); if(updated) selectPage(updated);
       setShowVersions(true); await loadVersions(); setMessage("Version restored into a new draft revision. The live page was not changed.");
     } catch(e) { setError(e instanceof Error?e.message:"Could not restore version."); }

@@ -1,4 +1,5 @@
 "use client";
+import { readApiResponse } from "@/lib/client-api";
 import { useEffect, useState } from "react";
 import { Plus, Save, Trash2, ArrowUp, ArrowDown } from "lucide-react";
 
@@ -20,8 +21,8 @@ const empty:Settings={
 const newId=()=>globalThis.crypto?.randomUUID?.()||String(Date.now())+Math.random().toString(36).slice(2);
 export default function SettingsEditor(){
  const [settings,setSettings]=useState<Settings>(empty);const [mediaAssets,setMediaAssets]=useState<MediaChoice[]>([]);const [busy,setBusy]=useState(false);const [loading,setLoading]=useState(true);const [error,setError]=useState("");const [message,setMessage]=useState("");
- useEffect(()=>{fetch("/api/v1/admin/settings",{cache:"no-store"}).then(async(response)=>{const body=await response.json();if(!response.ok)throw new Error(body.error||"Could not load settings.");setSettings({...empty,...body.data,theme:{...empty.theme,...body.data.theme},contact:{...empty.contact,...body.data.contact},announcement:{...empty.announcement,...body.data.announcement},seo:{...empty.seo,...body.data.seo},navigation:body.data.navigation||[],socialLinks:body.data.socialLinks||[]});}).catch((e:unknown)=>setError(e instanceof Error?e.message:"Could not load settings.")).finally(()=>setLoading(false));},[]);
- useEffect(()=>{fetch("/api/v1/admin/media?limit=50",{cache:"no-store"}).then(async(response)=>{if(!response.ok)return [];const body=await response.json();return (body.data as MediaChoice[]).filter((item)=>item.resourceType==="image");}).then(setMediaAssets).catch(()=>setMediaAssets([]));},[]);
+ useEffect(()=>{fetch("/api/v1/admin/settings",{cache:"no-store"}).then(async(response)=>{const body=await readApiResponse(response);if(!response.ok)throw new Error(body.error||"Could not load settings.");setSettings({...empty,...body.data,theme:{...empty.theme,...body.data.theme},contact:{...empty.contact,...body.data.contact},announcement:{...empty.announcement,...body.data.announcement},seo:{...empty.seo,...body.data.seo},navigation:body.data.navigation||[],socialLinks:body.data.socialLinks||[]});}).catch((e:unknown)=>setError(e instanceof Error?e.message:"Could not load settings.")).finally(()=>setLoading(false));},[]);
+ useEffect(()=>{fetch("/api/v1/admin/media?limit=50",{cache:"no-store"}).then(async(response)=>{if(!response.ok)return [];const body=await readApiResponse(response);return (body.data as MediaChoice[]).filter((item)=>item.resourceType==="image");}).then(setMediaAssets).catch(()=>setMediaAssets([]));},[]);
  function patch<K extends keyof Settings>(key:K,value:Settings[K]){setSettings((old)=>({...old,[key]:value}));}
  function patchTheme<K extends keyof Settings["theme"]>(key:K,value:Settings["theme"][K]){setSettings((old)=>({...old,theme:{...old.theme,[key]:value}}));}
  function patchContact<K extends keyof Settings["contact"]>(key:K,value:Settings["contact"][K]){setSettings((old)=>({...old,contact:{...old.contact,[key]:value}}));}
@@ -31,7 +32,7 @@ export default function SettingsEditor(){
  function patchChild(index:number,childIndex:number,patches:Partial<Nav["children"][number]>){setSettings((old)=>({...old,navigation:old.navigation.map((item,i)=>i===index?{...item,children:item.children.map((child,j)=>j===childIndex?{...child,...patches}:child)}:item)}));}
  async function save(){
   setBusy(true);setError("");setMessage("");
-  try{const response=await fetch("/api/v1/admin/settings",{method:"PUT",headers:{"Content-Type":"application/json"},body:JSON.stringify(settings)});const body=await response.json();if(!response.ok)throw new Error(body.error||"Could not save settings.");setSettings({...empty,...body.data,theme:{...empty.theme,...body.data.theme},contact:{...empty.contact,...body.data.contact},announcement:{...empty.announcement,...body.data.announcement},seo:{...empty.seo,...body.data.seo}});setMessage("Website settings saved.");}
+  try{const response=await fetch("/api/v1/admin/settings",{method:"PUT",headers:{"Content-Type":"application/json"},body:JSON.stringify(settings)});const body=await readApiResponse(response);if(!response.ok)throw new Error(body.error||"Could not save settings.");setSettings({...empty,...body.data,theme:{...empty.theme,...body.data.theme},contact:{...empty.contact,...body.data.contact},announcement:{...empty.announcement,...body.data.announcement},seo:{...empty.seo,...body.data.seo}});setMessage("Website settings saved.");}
   catch(e){setError(e instanceof Error?e.message:"Could not save settings.");}finally{setBusy(false);}
  }
  if(loading)return <div className="content-card p-8"><p className="text-sm text-slate-500">Loading website settings…</p></div>;

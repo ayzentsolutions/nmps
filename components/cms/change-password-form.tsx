@@ -1,4 +1,5 @@
 "use client";
+import { readApiResponse } from "@/lib/client-api";
 import {useState,type FormEvent} from "react";
 import {signOut} from "next-auth/react";
 
@@ -15,7 +16,7 @@ export default function ChangePasswordForm(){
   setBusy(true);
   try{
    const response=await fetch("/api/v1/auth/change-password",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({currentPassword,newPassword})});
-   const body=await response.json();if(!response.ok)throw new Error(body.error||"Could not change password.");
+   const body=await readApiResponse(response);if(!response.ok)throw new Error(body.error||"Could not change password.");
    await signOut({redirect:false});window.location.assign("/admin/login?passwordChanged=1");
   }catch(e){setError(e instanceof Error?e.message:"Could not change password.");}finally{setBusy(false);}
  }
