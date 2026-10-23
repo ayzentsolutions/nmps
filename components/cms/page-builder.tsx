@@ -12,16 +12,16 @@ type MediaChoice = { id: string; title: string; secureUrl: string; altText: stri
 const emptyContent: Content = { blocks: [], seo: { title: "", description: "", ogImage: "" } };
 const blockId = () => globalThis.crypto?.randomUUID?.() || String(Date.now()) + Math.random().toString(36).slice(2);
 function makeBlock(type: string): Block {
-  if (type === "hero") return { id: blockId(), type, visible: true, eyebrow: "Welcome", title: "A place to learn, grow, and lead.", subtitle: "Introduce your school in a few thoughtful words.", buttonLabel: "Discover our school", buttonHref: "/about" };
-  if (type === "cta") return { id: blockId(), type, visible: true, title: "Take the next step", body: "Give families a clear next action.", buttonLabel: "Contact us", buttonHref: "/contact" };
-  if (type === "imageText") return { id: blockId(), type, visible: true, title: "A thoughtful learning environment", body: "Describe this feature or school facility.", imageUrl: "", imageAlt: "" };
-  if (type === "stats") return { id: blockId(), type, visible: true, title: "Our school at a glance", items: [{ label: "Students", value: "500+" }, { label: "Faculty", value: "40+" }, { label: "Years of learning", value: "25+" }] };
-  if (type === "cardGrid") return { id: blockId(), type, visible: true, title: "What makes us different", items: [{ title: "Curiosity", body: "Encouraging learners to ask better questions." }, { title: "Community", body: "Helping students and families feel supported." }, { title: "Character", body: "Building habits for lifelong growth." }] };
-  if (type === "faq") return { id: blockId(), type, visible: true, title: "Frequently asked questions", items: [{ question: "How can I contact the school?", answer: "Use the contact form to send a message to our staff." }, { question: "Where can I find admission details?", answer: "Visit the admissions page for the current process." }] };
-  if (type === "videoEmbed") return { id: blockId(), type, visible: true, title: "Watch our school video", videoUrl: "", caption: "" };
-  if (type === "imageGallery") return { id: blockId(), type, visible: true, title: "School moments", items: [] };
-  if (type === "downloadList") return { id: blockId(), type, visible: true, title: "Downloads and documents", items: [{ title: "School document", description: "Add a short description.", fileUrl: "" }] };
-  return { id: blockId(), type: "richText", visible: true, title: "Section heading", body: "Write meaningful content for families and students." };
+  if (type === "hero") return { id: blockId(), type, visible: true, eyebrow: "", title: "", subtitle: "", buttonLabel: "", buttonHref: "" };
+  if (type === "cta") return { id: blockId(), type, visible: true, title: "", body: "", buttonLabel: "", buttonHref: "" };
+  if (type === "imageText") return { id: blockId(), type, visible: true, title: "", body: "", imageUrl: "", imageAlt: "" };
+  if (type === "stats") return { id: blockId(), type, visible: true, title: "", items: [{ label: "", value: "" }, { label: "", value: "" }, { label: "", value: "" }] };
+  if (type === "cardGrid") return { id: blockId(), type, visible: true, title: "", items: [{ title: "", body: "" }, { title: "", body: "" }, { title: "", body: "" }] };
+  if (type === "faq") return { id: blockId(), type, visible: true, title: "", items: [{ question: "", answer: "" }, { question: "", answer: "" }] };
+  if (type === "videoEmbed") return { id: blockId(), type, visible: true, title: "", videoUrl: "", caption: "" };
+  if (type === "imageGallery") return { id: blockId(), type, visible: true, title: "", items: [] };
+  if (type === "downloadList") return { id: blockId(), type, visible: true, title: "", items: [{ title: "", description: "", fileUrl: "" }] };
+  return { id: blockId(), type: "richText", visible: true, title: "", body: "" };
 }
 function normalize(value: unknown): Content {
   if (!value || typeof value !== "object") return emptyContent;
