@@ -17,8 +17,17 @@ export async function sendTransactionalEmail(input: TransactionalEmail): Promise
   const apiKey = process.env.RESEND_API_KEY?.trim();
   const from = process.env.EMAIL_FROM?.trim();
   const to = input.to.trim();
+  const missingConfiguration = [
+    ...(!apiKey ? ["RESEND_API_KEY"] : []),
+    ...(!from ? ["EMAIL_FROM"] : [])
+  ];
 
-  if (!apiKey || !from || !to) {
+  if (missingConfiguration.length || !to) {
+    console.error("Transactional email is not configured", {
+      category: input.category,
+      missingConfiguration,
+      recipientProvided: Boolean(to)
+    });
     return false;
   }
 
@@ -42,9 +51,22 @@ export async function sendTransactionalEmail(input: TransactionalEmail): Promise
     });
 
     if (!response.ok) {
+      let providerCode: string | undefined;
+      try {
+        const providerBody: unknown = await response.json();
+        if (providerBody && typeof providerBody === "object" && "name" in providerBody) {
+          const name = providerBody.name;
+          if (typeof name === "string" && /^[A-Za-z0-9_-]{1,80}$/.test(name)) {
+            providerCode = name;
+          }
+        }
+      } catch {
+        // Provider responses can be non-JSON; status is still useful for diagnostics.
+      }
       console.error("Transactional email provider rejected a message", {
         category: input.category,
-        status: response.status
+        status: response.status,
+        ...(providerCode ? { providerCode } : {})
       });
       return false;
     }

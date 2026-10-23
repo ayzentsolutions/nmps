@@ -19,6 +19,19 @@ This procedure uses synthetic test records only. Run it against an isolated stag
 6. Create one dedicated, active staging reset-test account, with a known original password of at least 14 characters, a verified email inbox you can read, and permission to use the staging workspace. Do not use a real staff member's account.
 7. Select a monitored test recipient mailbox for staging messages, preferably distinct from real applicant addresses. Verify the Resend sender domain and configure its sending capability before testing.
 
+## Forgot-password email troubleshooting
+
+The forgot-password endpoint intentionally returns the same success message for existing and unknown email addresses to prevent account discovery. A success message in the browser does **not** prove Resend accepted or delivered an email.
+
+For the deployed environment, verify all three application variables and then redeploy/restart the application:
+- `RESEND_API_KEY`: a valid Resend API key available to the production/staging deployment where the form is being used.
+- `EMAIL_FROM`: a sender identity on a domain verified in Resend, e.g. `NMPS School <no-reply@your-verified-domain.example>`. Replace the example with the school's real verified domain.
+- `AUTH_URL`: the canonical public HTTPS origin of that same deployment, with no path (for example, `https://school.example`). This host is embedded into the reset link.
+
+Check the hosting provider's server/function logs immediately after a test request. They now distinguish missing email variables, missing/invalid `AUTH_URL`, provider rejection (HTTP status and safe provider error code), and network/timeout failures without logging reset tokens, credentials, recipient addresses, or full provider error messages. If logs say the email provider accepted a message but the inbox is empty, inspect Resend's email log for delivery/bounce/suppression state and check Spam/Junk.
+
+A reset link is generated only for an active staff account whose stored email matches the submitted email. The reset token is invalidated if sending fails. Never put the API key in source control or send it in chat. Use an authorized test staff account and inbox for verification.
+
 ## 2. Configure GitHub's staging environment
 
 In the repository, open **Settings → Environments → New environment** and create `staging`. Configure the following environment variable and environment secrets. Do not add their values to source control, issue comments, screenshots, or logs.

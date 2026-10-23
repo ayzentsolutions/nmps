@@ -23,16 +23,16 @@ export async function POST(request:NextRequest){
   const tokenHash=createHash("sha256").update(token).digest("hex");
   const reset=await PasswordResetToken.create({userId:user._id,schoolId:user.schoolId,tokenHash,expiresAt:new Date(Date.now()+30*60*1000),consumedAt:null});
   const baseUrl=process.env.AUTH_URL?.trim();
-  if(!baseUrl){await reset.deleteOne();return NextResponse.json({message:genericMessage},{status:200});}
+  if(!baseUrl){console.error("Password reset email skipped: AUTH_URL is not configured.");await reset.deleteOne();return NextResponse.json({message:genericMessage},{status:200});}
   let resetUrl:string;
   try{const url=new URL("/admin/reset-password",baseUrl);url.searchParams.set("token",token);resetUrl=url.toString();}
-  catch{await reset.deleteOne();return NextResponse.json({message:genericMessage},{status:200});}
+  catch(error){console.error("Password reset email skipped: AUTH_URL is invalid.",{errorType:error instanceof Error?error.name:"UnknownError"});await reset.deleteOne();return NextResponse.json({message:genericMessage},{status:200});}
   const sent=await sendTransactionalEmail({
    category:"password-reset",to:user.email,subject:"Reset your NMPS staff account password",
    text:"Hello "+user.name+",\n\nA password reset was requested for your NMPS staff account. Use this link within 30 minutes:\n"+resetUrl+"\n\nIf you did not request this, you can ignore this email. Your current password has not changed.\n\nNMPS School CMS",
    idempotencyKey:"nmps:password-reset:"+tokenHash
   });
-  if(!sent)await reset.deleteOne();
+  if(!sent){await reset.deleteOne();console.error("Password reset email was not sent; reset token was invalidated.",{category:"password-reset"});}
   return NextResponse.json({message:genericMessage},{status:200});
  }catch(error){return internalError(error);}
 }
