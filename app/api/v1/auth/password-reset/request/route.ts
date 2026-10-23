@@ -5,6 +5,7 @@ import PasswordResetToken from "@/models/PasswordResetToken";
 import {connectToDatabase} from "@/lib/mongodb";
 import {checkRateLimit} from "@/lib/rate-limit";
 import {sendTransactionalEmail} from "@/lib/email";
+import {buildPasswordResetUrl,PasswordResetUrlError} from "@/lib/password-reset-url";
 import {passwordResetRequestSchema} from "@/lib/validations/password-reset";
 import {internalError,validationError} from "@/lib/api-response";
 export const dynamic="force-dynamic";
@@ -22,11 +23,15 @@ export async function POST(request:NextRequest){
   const token=randomBytes(32).toString("base64url");
   const tokenHash=createHash("sha256").update(token).digest("hex");
   const reset=await PasswordResetToken.create({userId:user._id,schoolId:user.schoolId,tokenHash,expiresAt:new Date(Date.now()+30*60*1000),consumedAt:null});
-  const baseUrl=process.env.AUTH_URL?.trim();
-  if(!baseUrl){console.error("Password reset email skipped: AUTH_URL is not configured.");await reset.deleteOne();return NextResponse.json({message:genericMessage},{status:200});}
   let resetUrl:string;
-  try{const url=new URL("/admin/reset-password",baseUrl);url.searchParams.set("token",token);resetUrl=url.toString();}
-  catch(error){console.error("Password reset email skipped: AUTH_URL is invalid.",{errorType:error instanceof Error?error.name:"UnknownError"});await reset.deleteOne();return NextResponse.json({message:genericMessage},{status:200});}
+  try {
+   resetUrl=buildPasswordResetUrl(process.env.AUTH_URL,token,process.env.NODE_ENV==="production");
+  } catch(error) {
+   const reason=error instanceof PasswordResetUrlError?error.code:"AUTH_URL_INVALID";
+   console.error("Password reset email skipped: public reset URL configuration is invalid.",{reason});
+   await reset.deleteOne();
+   return NextResponse.json({message:genericMessage},{status:200});
+  }
   const sent=await sendTransactionalEmail({
    category:"password-reset",to:user.email,subject:"Reset your NMPS staff account password",
    text:"Hello "+user.name+",\n\nA password reset was requested for your NMPS staff account. Use this link within 30 minutes:\n"+resetUrl+"\n\nIf you did not request this, you can ignore this email. Your current password has not changed.\n\nNMPS School CMS",

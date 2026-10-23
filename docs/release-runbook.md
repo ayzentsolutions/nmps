@@ -26,7 +26,7 @@ The forgot-password endpoint intentionally returns the same success message for 
 For the deployed environment, verify all three application variables and then redeploy/restart the application:
 - `RESEND_API_KEY`: a valid Resend API key available to the production/staging deployment where the form is being used.
 - `EMAIL_FROM`: a sender identity on a domain verified in Resend, e.g. `NMPS School <no-reply@your-verified-domain.example>`. Replace the example with the school's real verified domain.
-- `AUTH_URL`: the canonical public HTTPS origin of that same deployment, with no path (for example, `https://school.example`). This host is embedded into the reset link.
+- ``AUTH_URL`: the canonical public HTTPS origin of that same deployment, with no path (for example, `https://school.example`). This host is embedded into the reset link. Production rejects HTTP and localhost reset-link origins; the `.env.example` localhost value is for local development only.
 
 Check the hosting provider's server/function logs immediately after a test request. They now distinguish missing email variables, missing/invalid `AUTH_URL`, provider rejection (HTTP status and safe provider error code), and network/timeout failures without logging reset tokens, credentials, recipient addresses, or full provider error messages. If logs say the email provider accepted a message but the inbox is empty, inspect Resend's email log for delivery/bounce/suppression state and check Spam/Junk.
 
