@@ -3,7 +3,7 @@
  * parsing errors. API error payloads remain available to callers for their normal
  * response.ok and body.error handling.
  */
-export async function readApiResponse<T = any>(response: Response): Promise<T> {
+export async function readApiResponse<T = ReturnType<typeof JSON.parse>>(response: Response): Promise<T> {
   const contentType = response.headers.get("content-type") || "";
   if (!contentType.toLowerCase().includes("json")) {
     const status = `HTTP ${response.status}${response.statusText ? " " + response.statusText : ""}`;
